@@ -375,7 +375,7 @@ spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 
 ## 联系方式
 
-- **作者**：Designer
+- **作者**：贾奕嘉
 - **项目名称**：通融物管 APP（TongRong Property Management）
 - **当前版本**：v1.2.1
-- **许可协议**：私有项目，未经授权不得商用或二次分发
+- **许可协议**：你想用就用吧，你用了我开心，别忘了给一个star💕
