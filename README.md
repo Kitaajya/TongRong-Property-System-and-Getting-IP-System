@@ -1,4 +1,3 @@
-# TongRong-Property-System-and-Getting-IP-System
 # 通融物管 APP (TongRong Property Management)
 
 ## 项目概述
