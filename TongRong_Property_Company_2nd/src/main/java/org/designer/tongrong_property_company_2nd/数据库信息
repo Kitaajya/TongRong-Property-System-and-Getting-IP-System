@@ -2,4 +2,4 @@ Tongrong_Company->拿到员工信息的数据库
               表=>log_in
               表=>exception_table_of_salary
 Purchase_Base->商品库
-              表=>products
+              表=>PurchaseBase.products

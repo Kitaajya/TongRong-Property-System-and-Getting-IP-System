@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>采购管理后台</title>
+    <style>
+        body { font-family: "Microsoft YaHei", sans-serif; margin: 20px; background: #a8086f; }
+        h1, h2 { color: #2c3e50; }
+        section { background: #fff; border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+        input, button { padding: 6px 10px; margin: 2px 4px; border: 1px solid #ccc; border-radius: 4px; }
+        button { background: #3498db; color: #fff; border: none; cursor: pointer; }
+        button:hover { opacity: .85; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #34495e; color: #fff; }
+        .result { margin-top: 10px; padding: 10px; background: #f0f8ff; border-radius: 4px; white-space: pre-wrap; font-family: Consolas, monospace; }
+        .error { color: #e74c3c; }
+    </style>
+</head>
+<body>
+
+<h1>采购管理系统</h1>
+
+<!-- 浏览全部商品 -->
+<section>
+    <h2>全部商品</h2>
+    <button onclick="loadAll()">刷新商品列表</button>
+    <div id="allTable"></div>
+</section>
+
+<!-- 查询单个商品 -->
+<section>
+    <h2>查询单个商品</h2>
+    <input id="singleName" placeholder="商品名称">
+    <button onclick="querySingle()">查询</button>
+    <div id="singleResult" class="result"></div>
+</section>
+
+<!-- 查询价格 -->
+<section>
+    <h2>价格查询</h2>
+    <input id="singlePriceName" placeholder="单个商品名">
+    <button onclick="querySinglePrice()">查单个价格</button>
+    <input id="morePriceNames" placeholder="多个商品名，逗号分隔">
+    <button onclick="queryMorePrices()">查多个价格</button>
+    <div id="priceResult" class="result"></div>
+</section>
+
+<!-- 计算总价 -->
+<section>
+    <h2>计算总价</h2>
+    <input id="totalNames" placeholder="商品名（可用逗号分隔）">
+    <input id="totalQuantity" type="number" value="1" min="1">
+    <button onclick="calcTotal()">计算总价</button>
+    <div id="totalResult" class="result"></div>
+</section>
+
+<!-- 添加商品 -->
+<section>
+    <h2>添加商品</h2>
+    <div>
+        <input id="pName" placeholder="名称">
+        <input id="pCategory" placeholder="分类">
+        <input id="pPrice" type="number" step="0.01" placeholder="价格">
+        <input id="pStock" type="number" value="1" placeholder="库存">
+        <input id="pSupplier" placeholder="供应商">
+        <input id="pDesc" placeholder="描述">
+        <button onclick="addProduct()">添加</button>
+    </div>
+    <div id="addResult" class="result"></div>
+</section>
+
+<script>
+    // 通用请求 + 异常处理
+    async function fetchJson(url, options) {
+        const resp = await fetch(url, options);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        return resp.json();
+    }
+
+    function show(elId, text, isError) {
+        const el = document.getElementById(elId);
+        el.textContent = text;
+        el.className = 'result' + (isError ? ' error' : '');
+    }
+
+    // 1. 全部商品
+    async function loadAll() {
+        try {
+            const list = await fetchJson('/api/purchase/travel');
+            const box = document.getElementById('allTable');
+            if (!list.length) { box.innerHTML = '<p>暂无商品</p>'; return; }
+            const keys = Object.keys(list[0]);
+            box.innerHTML =
+                '<table><thead><tr>' + keys.map(k => '<th>' + k + '</th>').join('') + '</tr></thead><tbody>' +
+                list.map(row => '<tr>' + keys.map(k => '<td>' + (row[k] ?? '') + '</td>').join('') + '</tr>').join('') +
+                '</tbody></table>';
+        } catch (e) { show('allTable', '加载失败: ' + e.message, true); }
+    }
+
+    // 2. 查询单个商品
+    async function querySingle() {
+        const name = document.getElementById('singleName').value.trim();
+        if (!name) return show('singleResult', '请输入商品名', true);
+        try {
+            const list = await fetchJson('/api/purchase/select/single/product?selectName=' + encodeURIComponent(name));
+            show('singleResult', JSON.stringify(list, null, 2));
+        } catch (e) { show('singleResult', '查询失败: ' + e.message, true); }
+    }
+
+    // 3. 价格查询
+    async function querySinglePrice() {
+        const name = document.getElementById('singlePriceName').value.trim();
+        if (!name) return show('priceResult', '请输入商品名', true);
+        try {
+            const list = await fetchJson('/api/purchase/select/single/product/price?productName=' + encodeURIComponent(name));
+            show('priceResult', JSON.stringify(list, null, 2));
+        } catch (e) { show('priceResult', '查询失败: ' + e.message, true); }
+    }
+
+    async function queryMorePrices() {
+        const names = document.getElementById('morePriceNames').value.trim();
+        if (!names) return show('priceResult', '请输入商品名', true);
+        try {
+            const list = await fetchJson('/api/purchase/select/more/product/price?productsName=' + encodeURIComponent(names));
+            show('priceResult', JSON.stringify(list, null, 2));
+        } catch (e) { show('priceResult', '查询失败: ' + e.message, true); }
+    }
+
+    // 4. 计算总价（单商品 单价×数量，或多商品单价求和）
+    async function calcTotal() {
+        const names = document.getElementById('totalNames').value.trim();
+        const qty = document.getElementById('totalQuantity').value;
+        if (!names) return show('totalResult', '请输入商品名', true);
+        try {
+            const url = names.includes(',')
+                ? '/api/purchase/calculate/total/price/with/name?productsName=' + encodeURIComponent(names)
+                : '/api/purchase/calculate/total/price?products=' + encodeURIComponent(names) + '&quantity=' + qty;
+            const data = await fetchJson(url);
+            show('totalResult', data.success ? '总价: ' + data.totalPrice : '计算失败: ' + (data.message || ''));
+        } catch (e) { show('totalResult', '计算失败: ' + e.message, true); }
+    }
+
+    // 5. 添加商品（后端已是 @PostMapping，用 POST + 表单提交）
+    async function addProduct() {
+        const p = {
+            productsName: document.getElementById('pName').value.trim(),
+            productsCategory: document.getElementById('pCategory').value.trim(),
+            productsPrice: document.getElementById('pPrice').value,
+            productsStock: document.getElementById('pStock').value,
+            productsSupplier: document.getElementById('pSupplier').value.trim(),
+            productsDescription: document.getElementById('pDesc').value.trim()
+        };
+        if (!p.productsName || !p.productsCategory || !p.productsSupplier || !p.productsDescription)
+            return show('addResult', '请填写名称/分类/供应商/描述', true);
+        try {
+            const data = await fetchJson('/api/purchase/add/single/product', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams(p).toString()
+            });
+            show('addResult', JSON.stringify(data, null, 2));
+            loadAll();
+        } catch (e) { show('addResult', '添加失败: ' + e.message, true); }
+    }
+
+    loadAll();
+</script>
+</body>
+</html>
