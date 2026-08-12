@@ -378,5 +378,6 @@ spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 - **QQ邮箱**：3662308525@qq.com或conandoyle1@qq.com
 - **项目名称**：通融物管 APP（TongRong Property Management）
 - **历史版本**：v1.2.1(2026年7月27日->2026年8月4日)
-- **当前版本**：v1.2.2(2026年8月5日->2026年8月9日)
+- **历史版本**：v1.2.2(2026年8月5日->2026年8月9日)
+- **当前版本**  v1.2.2(2026年8月9日->2026年8月12日)
 - **许可协议**：你想用就用吧，你用了我开心，别忘了给一个star💕
