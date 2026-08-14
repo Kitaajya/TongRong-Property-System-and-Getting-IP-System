@@ -17,6 +17,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 @RestController
@@ -28,6 +29,9 @@ public class OpenMeteoDemo {
     // 高并发缓存：ConcurrentHashMap 保证多线程读写安全
     private static final ConcurrentHashMap<String, String> WEATHER_CACHE = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, Long> WEATHER_CACHE_TIME = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, Double> TEMP_CACHE = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, Integer> CODE_CACHE = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, Double> WIND_CACHE = new ConcurrentHashMap<>();
     // 地名拼音
     private static final String CACHE_KEY = "Wuhan";
     // 缓存有效期：10分钟，避免高并发下每个请求都阻塞调用外部API
@@ -72,12 +76,13 @@ public class OpenMeteoDemo {
     }
 
     public String getWeather(String clientIp) {
+        // 每次请求都记录访问者地理位置(IP定位到省+市)
+        log.info("访问者IP:{} 地理位置:{}", clientIp, getLocation(clientIp));
         // 先查缓存，命中直接返回，避免阻塞式网络IO
         long now = System.currentTimeMillis();
         String cached = WEATHER_CACHE.get(CACHE_KEY);
         Long cachedTime = WEATHER_CACHE_TIME.get(CACHE_KEY);
         if (cached != null && cachedTime != null && now - cachedTime < CACHE_EXPIRE_MS) {
-            log.info("访问者在{}", getLocation(clientIp));
             return cached;
         }
 
@@ -108,6 +113,10 @@ public class OpenMeteoDemo {
         int weatherCode = extractInt(currentJson, "\"weather_code\":");
         double windSpeed = extractDouble(currentJson, "\"wind_speed_10m\":");
 
+        TEMP_CACHE.put(CACHE_KEY, temp);
+        CODE_CACHE.put(CACHE_KEY, weatherCode);
+        WIND_CACHE.put(CACHE_KEY, windSpeed);
+
         String weatherText = "\n("+"北纬"+lat+"、东经"+lon+"地区)\n"
                 + "🌡️ 温度：" + temp + " ℃\n"
                 + "💨 风速：" + windSpeed + " km/h\n"
@@ -117,6 +126,24 @@ public class OpenMeteoDemo {
         WEATHER_CACHE_TIME.put(CACHE_KEY, now);
         log.info(weatherText);
         return weatherText;
+    }
+
+    /**
+     * 返回结构化天气信息(前端用来展示天气图片/温度/风速)
+     */
+    @GetMapping("/info")
+    public Map<String, Object> getWeatherInfo(HttpServletRequest request) {
+        getWeather(getClientIp(request));
+        double temp = TEMP_CACHE.getOrDefault(CACHE_KEY, 0.0);
+        double wind = WIND_CACHE.getOrDefault(CACHE_KEY, 0.0);
+        int code = CODE_CACHE.getOrDefault(CACHE_KEY, 0);
+        return Map.of(
+                "location", "北纬" + lat + "、东经" + lon + "地区",
+                "temperature", temp,
+                "windSpeed", wind,
+                "weatherCode", code,
+                "weatherText", getWeatherText(code)
+        );
     }
 
     /**

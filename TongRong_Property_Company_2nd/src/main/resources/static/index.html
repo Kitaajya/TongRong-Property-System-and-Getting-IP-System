@@ -2,78 +2,481 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>采购管理后台</title>
+    <title>通融物业管理 - 采购管理后台</title>
     <style>
-        body { font-family: "Microsoft YaHei", sans-serif; margin: 20px; background: #a8086f; }
-        h1, h2 { color: #2c3e50; }
-        section { background: #fff; border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
-        input, button { padding: 6px 10px; margin: 2px 4px; border: 1px solid #ccc; border-radius: 4px; }
-        button { background: #3498db; color: #fff; border: none; cursor: pointer; }
-        button:hover { opacity: .85; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background: #34495e; color: #fff; }
-        .result { margin-top: 10px; padding: 10px; background: #f0f8ff; border-radius: 4px; white-space: pre-wrap; font-family: Consolas, monospace; }
-        .error { color: #e74c3c; }
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --danger: #dc2626;
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --text: #1e293b;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --bg-image: url('/bg.jpg');
+        }
+        * { box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--text);
+        }
+        h2 { margin-top: 0; font-size: 17px; color: #0f172a; border-left: 4px solid var(--primary); padding-left: 10px; }
+        h3 { margin: 0; }
+
+        /* 登录页全屏居中 */
+        #loginSection {
+            position: fixed; inset: 0; z-index: 10;
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, #1e3a8a, #2563eb);
+            margin: 0; padding: 0; border-radius: 0; border: none; box-shadow: none;
+        }
+        .login-box {
+            max-width: 420px; width: 90%; padding: 32px;
+            background: #fff; border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(15,23,42,.3);
+        }
+        .login-box h2 { text-align: center; font-size: 22px; border-left: none; padding-left: 0; }
+        .tab-btn { background: #e2e8f0; color: #475569; }
+        .tab-btn.active { background: var(--primary); color: #fff; }
+        .hidden { display: none !important; }
+
+        /* 两栏布局:左栏1/3,右栏2/3 */
+        .layout { display: flex; height: 100vh; }
+        .sidebar {
+            width: 33.33%; min-width: 250px;
+            background: linear-gradient(180deg, #1e3a8a, #1e40af);
+            color: #fff;
+            padding: 24px 18px;
+            overflow-y: auto;
+            display: flex; flex-direction: column; gap: 20px;
+        }
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 18px 22px;
+            background-image: var(--bg-image);
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        /* 左栏用户卡 + 默认头像 */
+        .user-card {
+            text-align: center;
+            padding: 18px 14px;
+            background: rgba(255,255,255,.12);
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,.15);
+        }
+        .avatar {
+            width: 72px; height: 72px; border-radius: 50%;
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            margin: 0 auto 10px;
+            display: flex; align-items: center; justify-content: center;
+            border: 3px solid rgba(255,255,255,.6);
+        }
+        .avatar svg { width: 40px; height: 40px; }
+        .user-name { color: #fff; font-size: 15px; margin-bottom: 10px; }
+        .menu-title {
+            color: rgba(255,255,255,.7); font-size: 12px;
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;
+        }
+
+        /* 左栏功能菜单 */
+        .nav { display: flex; flex-direction: column; gap: 6px; background: transparent; border: none; padding: 0; }
+        .nav a {
+            color: #dbeafe;
+            background: rgba(255,255,255,.08);
+            padding: 10px 14px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background .15s, color .15s;
+        }
+        .nav a:hover { background: var(--primary); color: #fff; }
+
+        /* 右栏天气卡片 */
+        .weather-card {
+            background: rgba(255,255,255,.88);
+            backdrop-filter: blur(4px);
+            border-radius: 12px;
+            padding: 12px 18px;
+            border: 1px solid rgba(226,232,240,.9);
+            box-shadow: 0 1px 3px rgba(15,23,42,.12);
+        }
+        #weatherBox { font-size: 14px; white-space: pre-wrap; font-family: Consolas, monospace; margin: 0; }
+        .weather-row { display: flex; align-items: center; gap: 14px; }
+        .weather-icon { width: 64px; height: 64px; }
+        .weather-temp { font-size: 28px; font-weight: bold; color: #0f172a; line-height: 1.1; }
+        .weather-desc { font-size: 14px; color: #475569; margin-top: 2px; }
+        .weather-loc { margin-top: 8px; font-size: 12px; color: #64748b; }
+
+        /* 右栏钟表 */
+        .clock-box {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; padding: 18px 0;
+        }
+        #clockSvg { width: 230px; height: 230px; filter: drop-shadow(0 6px 14px rgba(0,0,0,.3)); }
+        .clock-face { fill: rgba(255,255,255,.94); stroke: #94a3b8; stroke-width: 2; }
+        .tick { stroke: #475569; stroke-width: 2; }
+        .hour { stroke: #1e293b; stroke-width: 6; stroke-linecap: round; }
+        .min { stroke: #334155; stroke-width: 4; stroke-linecap: round; }
+        .sec { stroke: #dc2626; stroke-width: 2; stroke-linecap: round; }
+        .clock-pin { fill: #dc2626; stroke: #fff; stroke-width: 2; }
+        #clockText {
+            font-family: Consolas, monospace; font-size: 22px; color: #0f172a;
+            background: rgba(255,255,255,.88); padding: 4px 16px; border-radius: 8px; margin-top: 10px;
+        }
+
+        /* 功能卡片 */
+        section {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 18px 22px;
+            margin-bottom: 18px;
+            box-shadow: 0 1px 3px rgba(15,23,42,.08);
+            border: 1px solid var(--border);
+        }
+        input, textarea {
+            padding: 8px 12px; margin: 4px;
+            border: 1px solid var(--border); border-radius: 8px;
+            font-size: 14px; outline: none; background: #fff;
+            transition: border-color .15s, box-shadow .15s;
+        }
+        input:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+        button {
+            padding: 8px 16px; margin: 4px; border: none; border-radius: 8px;
+            font-size: 14px; cursor: pointer; background: var(--primary); color: #fff;
+            transition: background .15s, transform .05s;
+        }
+        button:hover { background: var(--primary-dark); }
+        button:active { transform: translateY(1px); }
+        .danger { background: var(--danger); }
+        .danger:hover { background: #b91c1c; }
+        .ghost { background: #e2e8f0; color: #475569; }
+        .ghost:hover { background: #cbd5e1; }
+        #logoutBtn { background: var(--danger); }
+        #logoutBtn:hover { background: #b91c1c; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        th, td { border-bottom: 1px solid var(--border); padding: 10px 8px; text-align: left; }
+        th { background: #f8fafc; color: var(--muted); font-weight: 600; }
+        tbody tr:hover { background: #f8fafc; }
+        tbody tr:nth-child(even) { background: #fafbfc; }
+        .result {
+            margin-top: 10px; padding: 12px;
+            background: #f8fafc; border: 1px solid var(--border); border-radius: 8px;
+            white-space: pre-wrap; font-family: Consolas, monospace; font-size: 13px;
+            max-height: 300px; overflow: auto;
+        }
+        .error { color: var(--danger); }
+
+        /* ===== 美化增强 ===== */
+        html { scroll-behavior: smooth; }
+        body { background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); }
+        section {
+            transition: box-shadow .2s, transform .2s, border-color .2s;
+        }
+        section:hover {
+            box-shadow: 0 8px 24px rgba(15,23,42,.1);
+            border-color: #c7d2fe;
+        }
+        h2 { position: relative; }
+        .section-tip { margin: 6px 0 10px; font-size: 12px; color: var(--muted); }
+
+        /* 状态徽标 */
+        .badge {
+            display: inline-block; padding: 2px 10px; border-radius: 20px;
+            font-size: 12px; font-weight: 600; line-height: 1.7; white-space: nowrap;
+        }
+        .badge-ok { background: #dcfce7; color: #15803d; }
+        .badge-warn { background: #fef3c7; color: #b45309; }
+        .badge-danger { background: #fee2e2; color: #b91c1c; }
+
+        /* 导航 */
+        .nav a {
+            border-left: 3px solid transparent;
+            transition: background .15s, color .15s, border-color .15s, padding-left .15s;
+        }
+        .nav a:hover { padding-left: 18px; }
+        .nav a.active {
+            background: var(--primary); color: #fff;
+            border-left-color: #93c5fd;
+            box-shadow: 0 4px 12px rgba(37,99,235,.35);
+        }
+
+        /* 表格 */
+        th {
+            position: sticky; top: 0; z-index: 1;
+            border-bottom: 2px solid var(--border);
+            text-transform: uppercase; font-size: 12px; letter-spacing: .5px;
+        }
+        table { border-radius: 8px; overflow: hidden; }
+        tbody tr { transition: background .12s; }
+        tbody tr:hover { background: #eef2ff; }
+
+        /* 按钮 */
+        button { box-shadow: 0 1px 3px rgba(15,23,42,.12); font-weight: 500; }
+        button:hover { box-shadow: 0 4px 12px rgba(37,99,235,.28); }
+        .ghost { box-shadow: none; }
+        button:focus-visible, input:focus-visible, textarea:focus-visible {
+            outline: 2px solid var(--primary); outline-offset: 2px;
+        }
+
+        /* 滚动条 */
+        ::-webkit-scrollbar { width: 9px; height: 9px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(100,116,139,.35); border-radius: 5px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(100,116,139,.6); }
+
+        /* 登录页 */
+        .login-box { animation: fadeUp .35s ease; }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 响应式：窄屏改上下布局 */
+        @media (max-width: 900px) {
+            .layout { flex-direction: column; height: auto; min-height: 100vh; }
+            .sidebar { width: 100%; min-width: 0; }
+            .content { padding: 14px; }
+            .clock-box { display: none; }
+        }
     </style>
 </head>
 <body>
 
-<h1>采购管理系统</h1>
-
-<!-- 浏览全部商品 -->
-<section>
-    <h2>全部商品</h2>
-    <button onclick="loadAll()">刷新商品列表</button>
-    <div id="allTable"></div>
-</section>
-
-<!-- 查询单个商品 -->
-<section>
-    <h2>查询单个商品</h2>
-    <input id="singleName" placeholder="商品名称">
-    <button onclick="querySingle()">查询</button>
-    <div id="singleResult" class="result"></div>
-</section>
-
-<!-- 查询价格 -->
-<section>
-    <h2>价格查询</h2>
-    <input id="singlePriceName" placeholder="单个商品名">
-    <button onclick="querySinglePrice()">查单个价格</button>
-    <input id="morePriceNames" placeholder="多个商品名，逗号分隔">
-    <button onclick="queryMorePrices()">查多个价格</button>
-    <div id="priceResult" class="result"></div>
-</section>
-
-<!-- 计算总价 -->
-<section>
-    <h2>计算总价</h2>
-    <input id="totalNames" placeholder="商品名（可用逗号分隔）">
-    <input id="totalQuantity" type="number" value="1" min="1">
-    <button onclick="calcTotal()">计算总价</button>
-    <div id="totalResult" class="result"></div>
-</section>
-
-<!-- 添加商品 -->
-<section>
-    <h2>添加商品</h2>
-    <div>
-        <input id="pName" placeholder="名称">
-        <input id="pCategory" placeholder="分类">
-        <input id="pPrice" type="number" step="0.01" placeholder="价格">
-        <input id="pStock" type="number" value="1" placeholder="库存">
-        <input id="pSupplier" placeholder="供应商">
-        <input id="pDesc" placeholder="描述">
-        <button onclick="addProduct()">添加</button>
+<!-- 登录 / 注册 -->
+<section id="loginSection">
+    <div class="login-box">
+        <h2 id="loginTitle">用户登录</h2>
+        <div style="text-align:center">
+            <button class="tab-btn active" id="tabLogin" onclick="switchTab('login')">登录</button>
+            <button class="tab-btn" id="tabRegister" onclick="switchTab('register')">注册</button>
+        </div>
+        <div style="margin-top:12px">
+            <div id="loginFields">
+                <p><input id="loginUsername" placeholder="用户名" style="width:100%"></p>
+                <p><input id="loginPassword" type="password" placeholder="密码" style="width:100%"></p>
+            </div>
+            <div id="registerFields" class="hidden">
+                <p><input id="regUsername" placeholder="用户名(登录账号)" style="width:100%"></p>
+                <p><input id="regPassword" type="password" placeholder="密码(至少6位)" style="width:100%"></p>
+                <p><input id="regFullName" placeholder="真实姓名(选填)" style="width:100%"></p>
+                <p><input id="regEmail" placeholder="电子邮箱(选填)" style="width:100%"></p>
+                <p><input id="regPhone" placeholder="手机号码(选填)" style="width:100%"></p>
+            </div>
+            <p style="text-align:center">
+                <button id="loginBtn" onclick="doLogin()">登 录</button>
+                <button id="registerBtn" class="hidden" onclick="doRegister()">注 册</button>
+            </p>
+            <div id="authMsg" class="result"></div>
+            <p style="text-align:center; color:#888">测试账号：admin / zhangsan / lisi，密码均为 123456</p>
+        </div>
     </div>
-    <div id="addResult" class="result"></div>
 </section>
+
+<!-- 已登录后才能使用的功能 -->
+<div id="mainContent" class="layout hidden">
+    <aside class="sidebar">
+        <div class="user-card">
+            <div class="avatar">
+                <svg viewBox="0 0 24 24" fill="#fff"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+            </div>
+            <div class="user-name" id="userInfo"></div>
+            <button id="logoutBtn" class="hidden" onclick="logout()">退出登录</button>
+        </div>
+        <div>
+            <h3 class="menu-title">功能菜单</h3>
+            <nav class="nav">
+                <a href="#" data-nav="all" onclick="return loadAll()">全部商品</a>
+                <a href="#" data-nav="single" onclick="return querySingle()">查询商品</a>
+                <a href="#" data-nav="fuzzy" onclick="return fuzzySearch()">模糊搜索</a>
+                <a href="#" data-nav="price" onclick="return querySinglePrice()">价格查询</a>
+                <a href="#" data-nav="total" onclick="return calcTotal()">计算总价</a>
+                <a href="#" data-nav="add" onclick="return addProduct()">添加商品</a>
+                <a href="#" data-nav="addMore" onclick="return addMoreProduct()">批量添加</a>
+                <a href="#" data-nav="edit" onclick="return editProduct()">修改/删除</a>
+                <a href="#" data-nav="checkStock" onclick="return checkStock()">库存检查</a>
+                <a href="#" data-nav="warning" onclick="return loadStockWarning()">库存预警</a>
+                <a href="#" data-nav="send" onclick="return sendProduct()">商品发货</a>
+                <a href="#" data-nav="pending" onclick="return loadPending()">商品审批</a>
+            </nav>
+        </div>
+    </aside>
+    <main class="content">
+        <div class="weather-card">
+            <div id="weatherBox">天气加载中...</div>
+        </div>
+        <div class="clock-box">
+            <svg id="clockSvg" viewBox="0 0 200 200">
+                <circle cx="100" cy="100" r="96" class="clock-face"/>
+                <g id="clockTicks"></g>
+                <g id="clockHands">
+                    <line id="hourHand" x1="100" y1="100" x2="100" y2="55" class="hour"/>
+                    <line id="minHand" x1="100" y1="100" x2="100" y2="35" class="min"/>
+                    <line id="secHand" x1="100" y1="100" x2="100" y2="25" class="sec"/>
+                </g>
+                <circle cx="100" cy="100" r="4" class="clock-pin"/>
+            </svg>
+            <div id="clockText">--:--:--</div>
+        </div>
+        <div class="sections">
+
+    <!-- 浏览全部商品 -->
+    <section>
+        <h2>全部商品</h2>
+        <button class="ghost" onclick="loadAll()">刷新商品列表</button>
+        <div id="allTable"></div>
+    </section>
+
+    <!-- 查询单个商品 -->
+    <section>
+        <h2>查询单个商品</h2>
+        <input id="singleName" placeholder="商品名称">
+        <button onclick="querySingle()">查询</button>
+        <div id="singleResult" class="result"></div>
+    </section>
+
+    <!-- 模糊搜索 -->
+    <section>
+        <h2>模糊搜索商品</h2>
+        <input id="fuzzyName" placeholder="关键字（名称/描述/供应商）">
+        <button onclick="fuzzySearch()">搜索</button>
+        <div id="fuzzyResult" class="result"></div>
+    </section>
+
+    <!-- 查询价格 -->
+    <section>
+        <h2>价格查询</h2>
+        <input id="singlePriceName" placeholder="单个商品名">
+        <button onclick="querySinglePrice()">查单个价格</button>
+        <input id="morePriceNames" placeholder="多个商品名，逗号分隔">
+        <button onclick="queryMorePrices()">查多个价格</button>
+        <div id="priceResult" class="result"></div>
+    </section>
+
+    <!-- 计算总价 -->
+    <section>
+        <h2>计算总价</h2>
+        <input id="totalNames" placeholder="商品名（可用逗号分隔）">
+        <input id="totalQuantity" type="number" value="1" min="1">
+        <button onclick="calcTotal()">计算总价</button>
+        <div id="totalResult" class="result"></div>
+    </section>
+
+    <!-- 添加商品 -->
+    <section>
+        <h2>添加商品</h2>
+        <div>
+            <input id="pName" placeholder="名称">
+            <input id="pCategory" placeholder="分类">
+            <input id="pPrice" type="number" step="0.01" placeholder="价格">
+            <input id="pStock" type="number" value="1" placeholder="库存">
+            <input id="pSupplier" placeholder="供应商">
+            <input id="pDesc" placeholder="描述">
+            <button onclick="addProduct()">添加</button>
+        </div>
+        <div id="addResult" class="result"></div>
+    </section>
+
+    <!-- 批量添加商品 -->
+    <section>
+        <h2>批量添加商品</h2>
+        <div>
+            <input id="mName" placeholder="名称">
+            <input id="mCategory" placeholder="分类">
+            <input id="mPrice" type="number" step="0.01" placeholder="价格">
+            <input id="mStock" type="number" value="1" placeholder="库存">
+            <input id="mSupplier" placeholder="供应商">
+            <input id="mDesc" placeholder="描述">
+            <input id="mQuantity" type="number" value="2" min="1" placeholder="数量">
+            <button onclick="addMoreProduct()">批量添加</button>
+        </div>
+        <div id="moreResult" class="result"></div>
+    </section>
+
+    <!-- 修改 / 删除商品 -->
+    <section>
+        <h2>修改 / 删除商品</h2>
+        <div>
+            <input id="eId" type="number" placeholder="商品ID">
+            <input id="eName" placeholder="商品名称">
+            <input id="eCategory" placeholder="分类">
+            <input id="ePrice" type="number" step="0.01" placeholder="价格">
+            <input id="eStock" type="number" placeholder="库存">
+            <input id="eSupplier" placeholder="供应商">
+            <input id="eDesc" placeholder="描述">
+            <button onclick="editProduct()">修改</button>
+            <button class="danger" onclick="deleteProduct()">删除</button>
+        </div>
+        <div id="editResult" class="result"></div>
+    </section>
+
+    <!-- 库存检查 -->
+    <section>
+        <h2>库存检查</h2>
+        <input id="stockName" placeholder="商品名称">
+        <button onclick="checkStock()">检查库存</button>
+        <div id="stockResult" class="result"></div>
+    </section>
+
+    <!-- 库存预警 -->
+    <section>
+        <h2>库存预警</h2>
+        <p class="section-tip">自动列出库存低于预警阈值（12）的商品</p>
+        <button class="ghost" onclick="loadStockWarning()">刷新预警列表</button>
+        <div id="warningResult" class="result"></div>
+        <div id="warningTable"></div>
+    </section>
+
+    <!-- 商品发货 -->
+    <section>
+        <h2>商品发货</h2>
+        <p class="section-tip">发货后该商品库存 -1，库存低于阈值（12）将无法发货</p>
+        <input id="sendName" placeholder="商品名称">
+        <button onclick="sendProduct()">发货（库存-1）</button>
+        <div id="sendResult" class="result"></div>
+    </section>
+
+    <!-- 商品审批 -->
+    <section>
+        <h2>商品审批</h2>
+        <button class="ghost" onclick="loadPending()">刷新待审核列表</button>
+        <div id="approvalResult" class="result"></div>
+        <div id="pendingTable"></div>
+    </section>
+
+    <!-- 查看所有评论 -->
+    <section>
+        <h2>所有评论</h2>
+        <div>
+            <input id="commentProductName" placeholder="给哪个商品发评论(仅发表时用)">
+            <textarea id="commentContent" rows="3" placeholder="请输入评论内容" style="width:100%;box-sizing:border-box;margin:4px 0"></textarea>
+            <button onclick="addComment()">发表评论</button>
+            <button class="ghost" onclick="loadComments()">查看所有评论</button>
+        </div>
+        <div id="commentResult" class="result"></div>
+        <div id="commentTable"></div>
+    </section>
+        </div>
+    </main>
+</div>
 
 <script>
-    // 通用请求 + 异常处理
+    let currentTab = 'login';
+
+    // 通用请求 + 异常处理（401 时自动回到登录页）
     async function fetchJson(url, options) {
         const resp = await fetch(url, options);
+        if (resp.status === 401) {
+            showLogin();
+            throw new Error('未登录或登录已过期，请先登录');
+        }
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         return resp.json();
     }
@@ -84,38 +487,209 @@
         el.className = 'result' + (isError ? ' error' : '');
     }
 
+    function switchTab(tab) {
+        currentTab = tab;
+        document.getElementById('loginTitle').textContent = tab === 'login' ? '用户登录' : '用户注册';
+        document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+        document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
+        document.getElementById('loginFields').classList.toggle('hidden', tab !== 'login');
+        document.getElementById('registerFields').classList.toggle('hidden', tab !== 'register');
+        document.getElementById('loginBtn').classList.toggle('hidden', tab !== 'login');
+        document.getElementById('registerBtn').classList.toggle('hidden', tab !== 'register');
+        document.getElementById('authMsg').textContent = '';
+    }
+
+    function showLogin() {
+        document.getElementById('loginSection').classList.remove('hidden');
+        document.getElementById('mainContent').classList.add('hidden');
+        document.getElementById('logoutBtn').classList.add('hidden');
+        document.getElementById('userInfo').textContent = '';
+        document.getElementById('authMsg').textContent = '';
+    }
+
+    function showMain(user) {
+        document.getElementById('loginSection').classList.add('hidden');
+        document.getElementById('mainContent').classList.remove('hidden');
+        document.getElementById('logoutBtn').classList.remove('hidden');
+        const fullName = (user && user.fullName) ? user.fullName + '（' + user.username + '）' : (user ? user.username : '');
+        document.getElementById('userInfo').textContent = '当前用户：' + fullName;
+        loadAll();
+        loadWeather();
+        startClock();
+        loadComments();
+        if (!window.__commentsTimer) {
+            window.__commentsTimer = setInterval(loadComments, 30000);
+        }
+    }
+
+    // 加载后端天气(结构化JSON + 网络天气图片)
+    async function loadWeather() {
+        const box = document.getElementById('weatherBox');
+        box.innerHTML = '天气加载中...';
+        try {
+            const resp = await fetch('/api/weather/info');
+            if (resp.status === 401) { showLogin(); return; }
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            const data = await resp.json();
+            box.innerHTML =
+                '<div class="weather-row">' +
+                    '<img class="weather-icon" src="' + weatherIcon(data.weatherCode) + '" alt="' + data.weatherText + '">' +
+                    '<div>' +
+                        '<div class="weather-temp">' + data.temperature + ' ℃</div>' +
+                        '<div class="weather-desc">' + data.weatherText + ' · 风速 ' + data.windSpeed + ' km/h</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="weather-loc">' + data.location + '</div>';
+        } catch (e) {
+            box.innerHTML = '天气获取失败: ' + e.message;
+        }
+    }
+
+    // WMO天气编码 -> 网络天气图片(OpenWeather图标)
+    function weatherIcon(code) {
+        const map = {
+            0: '01d', 1: '02d', 2: '03d', 3: '04d',
+            45: '50d', 48: '50d',
+            51: '09d', 53: '09d', 55: '09d',
+            61: '10d', 63: '10d', 65: '10d',
+            80: '09d', 81: '09d', 82: '09d',
+            95: '11d', 96: '11d', 99: '11d'
+        };
+        return 'https://openweathermap.org/img/wn/' + (map[code] || '01d') + '@2x.png';
+    }
+
+    // 实时钟表
+    function startClock() {
+        const ticks = document.getElementById('clockTicks');
+        let html = '';
+        for (let i = 0; i < 12; i++) {
+            const rad = i * 30 * Math.PI / 180;
+            html += '<line x1="' + (100 + Math.sin(rad) * 84) + '" y1="' + (100 - Math.cos(rad) * 84) +
+                    '" x2="' + (100 + Math.sin(rad) * 92) + '" y2="' + (100 - Math.cos(rad) * 92) + '" class="tick"/>';
+        }
+        ticks.innerHTML = html;
+
+        function tick() {
+            const now = new Date();
+            const sec = now.getSeconds(), min = now.getMinutes(), hr = now.getHours() % 12;
+            document.getElementById('secHand').setAttribute('transform', 'rotate(' + (sec * 6) + ' 100 100)');
+            document.getElementById('minHand').setAttribute('transform', 'rotate(' + (min * 6 + sec * 0.1) + ' 100 100)');
+            document.getElementById('hourHand').setAttribute('transform', 'rotate(' + (hr * 30 + min * 0.5) + ' 100 100)');
+            document.getElementById('clockText').textContent =
+                String(now.getHours()).padStart(2, '0') + ':' +
+                String(min).padStart(2, '0') + ':' +
+                String(sec).padStart(2, '0');
+        }
+        tick();
+        setInterval(tick, 1000);
+    }
+
+    async function doLogin() {
+        const username = document.getElementById('loginUsername').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        if (!username || !password) return show('authMsg', '请输入用户名和密码', true);
+        try {
+            const data = await fetchJson('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ username, password }).toString()
+            });
+            if (data.success) {
+                show('authMsg', '登录成功，正在进入系统...');
+                showMain(data);
+            } else {
+                show('authMsg', data.message || '登录失败', true);
+            }
+        } catch (e) { show('authMsg', '登录失败: ' + e.message, true); }
+    }
+
+    async function doRegister() {
+        const p = {
+            username: document.getElementById('regUsername').value.trim(),
+            password: document.getElementById('regPassword').value,
+            fullName: document.getElementById('regFullName').value.trim(),
+            email: document.getElementById('regEmail').value.trim(),
+            phone: document.getElementById('regPhone').value.trim()
+        };
+        if (!p.username || !p.password) return show('authMsg', '请输入用户名和密码', true);
+        try {
+            const data = await fetchJson('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams(p).toString()
+            });
+            show('authMsg', data.message || (data.success ? '注册成功' : '注册失败'), !data.success);
+            if (data.success) {
+                document.getElementById('regUsername').value = '';
+                document.getElementById('regPassword').value = '';
+                switchTab('login');
+                document.getElementById('loginUsername').value = p.username;
+            }
+        } catch (e) { show('authMsg', '注册失败: ' + e.message, true); }
+    }
+
+    async function logout() {
+        try { await fetch('/api/auth/logout', { method: 'POST' }); } catch (e) { /* 忽略 */ }
+        showLogin();
+    }
+
+    // 导航高亮
+    function markActive(key) {
+        document.querySelectorAll('.nav a').forEach(a =>
+            a.classList.toggle('active', a.getAttribute('data-nav') === key)
+        );
+    }
+
+    // 库存状态徽标
+    function stockBadge(stock) {
+        const s = Number(stock);
+        if (isNaN(s)) return '';
+        if (s < 12) return '<span class="badge badge-danger">库存预警 ' + s + '</span>';
+        if (s < 20) return '<span class="badge badge-warn">库存偏低 ' + s + '</span>';
+        return '<span class="badge badge-ok">库存充足</span>';
+    }
+
     // 1. 全部商品
     async function loadAll() {
+        markActive('all');
         try {
             const list = await fetchJson('/api/purchase/travel');
             const box = document.getElementById('allTable');
-            if (!list.length) { box.innerHTML = '<p>暂无商品</p>'; return; }
+            if (!list.length) { box.innerHTML = '<p>暂无商品</p>'; return false; }
             const keys = Object.keys(list[0]);
+            const hasStock = keys.includes('stock');
             box.innerHTML =
-                '<table><thead><tr>' + keys.map(k => '<th>' + k + '</th>').join('') + '</tr></thead><tbody>' +
-                list.map(row => '<tr>' + keys.map(k => '<td>' + (row[k] ?? '') + '</td>').join('') + '</tr>').join('') +
-                '</tbody></table>';
-        } catch (e) { show('allTable', '加载失败: ' + e.message, true); }
+                '<table><thead><tr>' + keys.map(k => '<th>' + k + '</th>').join('') + (hasStock ? '<th>状态</th>' : '') + '</tr></thead><tbody>' +
+                list.map(row =>
+                    '<tr>' + keys.map(k => '<td>' + (row[k] ?? '') + '</td>').join('') +
+                    (hasStock ? '<td>' + stockBadge(row.stock) + '</td>' : '') + '</tr>'
+                ).join('') + '</tbody></table>';
+            return false;
+        } catch (e) { show('allTable', '加载失败: ' + e.message, true); return false; }
     }
 
     // 2. 查询单个商品
     async function querySingle() {
+        markActive('single');
         const name = document.getElementById('singleName').value.trim();
         if (!name) return show('singleResult', '请输入商品名', true);
         try {
             const list = await fetchJson('/api/purchase/select/single/product?selectName=' + encodeURIComponent(name));
             show('singleResult', JSON.stringify(list, null, 2));
         } catch (e) { show('singleResult', '查询失败: ' + e.message, true); }
+        return false;
     }
 
     // 3. 价格查询
     async function querySinglePrice() {
+        markActive('price');
         const name = document.getElementById('singlePriceName').value.trim();
         if (!name) return show('priceResult', '请输入商品名', true);
         try {
             const list = await fetchJson('/api/purchase/select/single/product/price?productName=' + encodeURIComponent(name));
             show('priceResult', JSON.stringify(list, null, 2));
         } catch (e) { show('priceResult', '查询失败: ' + e.message, true); }
+        return false;
     }
 
     async function queryMorePrices() {
@@ -129,6 +703,7 @@
 
     // 4. 计算总价（单商品 单价×数量，或多商品单价求和）
     async function calcTotal() {
+        markActive('total');
         const names = document.getElementById('totalNames').value.trim();
         const qty = document.getElementById('totalQuantity').value;
         if (!names) return show('totalResult', '请输入商品名', true);
@@ -139,10 +714,12 @@
             const data = await fetchJson(url);
             show('totalResult', data.success ? '总价: ' + data.totalPrice : '计算失败: ' + (data.message || ''));
         } catch (e) { show('totalResult', '计算失败: ' + e.message, true); }
+        return false;
     }
 
     // 5. 添加商品（后端已是 @PostMapping，用 POST + 表单提交）
     async function addProduct() {
+        markActive('add');
         const p = {
             productsName: document.getElementById('pName').value.trim(),
             productsCategory: document.getElementById('pCategory').value.trim(),
@@ -164,7 +741,201 @@
         } catch (e) { show('addResult', '添加失败: ' + e.message, true); }
     }
 
-    loadAll();
+    // 5.5 模糊搜索
+    async function fuzzySearch() {
+        const keyword = document.getElementById('fuzzyName').value.trim();
+        if (!keyword) return show('fuzzyResult', '请输入关键字', true);
+        try {
+            const list = await fetchJson('/api/purchase/select/single/product/undefined?undefinedName=' + encodeURIComponent(keyword));
+            if (!list.length) { show('fuzzyResult', '没有找到匹配的商品'); return; }
+            show('fuzzyResult', JSON.stringify(list, null, 2));
+        } catch (e) { show('fuzzyResult', '搜索失败: ' + e.message, true); }
+        return false;
+    }
+
+    // 5.6 批量添加
+    async function addMoreProduct() {
+        markActive('addMore');
+        const p = {
+            productsName: document.getElementById('mName').value.trim(),
+            productsCategory: document.getElementById('mCategory').value.trim(),
+            productsPrice: document.getElementById('mPrice').value,
+            productsStock: document.getElementById('mStock').value,
+            productsSupplier: document.getElementById('mSupplier').value.trim(),
+            productsDescription: document.getElementById('mDesc').value.trim(),
+            quantity: document.getElementById('mQuantity').value
+        };
+        if (!p.productsName || !p.productsCategory || !p.productsSupplier || !p.productsDescription || !p.quantity || p.quantity < 1)
+            return show('moreResult', '请填写名称/分类/供应商/描述，且数量≥1', true);
+        try {
+            const data = await fetchJson('/api/purchase/add/more/product', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams(p).toString()
+            });
+            show('moreResult', JSON.stringify(data, null, 2), !data.success);
+            loadAll();
+        } catch (e) { show('moreResult', '批量添加失败: ' + e.message, true); }
+        return false;
+    }
+
+    // 5.7 修改商品
+    async function editProduct() {
+        markActive('edit');
+        const p = {
+            id: document.getElementById('eId').value,
+            productsName: document.getElementById('eName').value.trim(),
+            productsCategory: document.getElementById('eCategory').value.trim(),
+            productsPrice: document.getElementById('ePrice').value,
+            productsStock: document.getElementById('eStock').value,
+            productsSupplier: document.getElementById('eSupplier').value.trim(),
+            productsDescription: document.getElementById('eDesc').value.trim()
+        };
+        if (!p.id || !p.productsName || !p.productsCategory || !p.productsSupplier || !p.productsDescription)
+            return show('editResult', '请填写ID/名称/分类/供应商/描述', true);
+        try {
+            const data = await fetchJson('/api/purchase/edit/single/product?' + new URLSearchParams(p).toString(), { method: 'PUT' });
+            show('editResult', JSON.stringify(data, null, 2), !data.success);
+            loadAll();
+        } catch (e) { show('editResult', '修改失败: ' + e.message, true); }
+        return false;
+    }
+
+    // 5.8 删除商品
+    async function deleteProduct() {
+        const id = document.getElementById('eId').value;
+        const name = document.getElementById('eName').value.trim();
+        if (!id || !name) return show('editResult', '请填写商品ID和名称', true);
+        if (!confirm('确定删除商品「' + name + '」(ID=' + id + ') 吗？')) return;
+        try {
+            const data = await fetchJson('/api/purchase/delete/single/product?' + new URLSearchParams({ id, productName: name }).toString(), { method: 'DELETE' });
+            show('editResult', JSON.stringify(data, null, 2), !data.success);
+            loadAll();
+        } catch (e) { show('editResult', '删除失败: ' + e.message, true); }
+    }
+
+    // 5.9 库存检查
+    async function checkStock() {
+        markActive('checkStock');
+        const name = document.getElementById('stockName').value.trim();
+        if (!name) return show('stockResult', '请输入商品名', true);
+        try {
+            const data = await fetchJson('/api/purchase/check/stock?productName=' + encodeURIComponent(name));
+            show('stockResult', JSON.stringify(data, null, 2), !data.success);
+        } catch (e) { show('stockResult', '检查失败: ' + e.message, true); }
+        return false;
+    }
+
+    // 5.10 库存预警列表
+    async function loadStockWarning() {
+        markActive('warning');
+        try {
+            const list = await fetchJson('/api/purchase/stock/warning');
+            const box = document.getElementById('warningTable');
+            if (!list.length) { box.innerHTML = '<p>库存充足，暂无预警商品</p>'; return; }
+            const keys = ['id', 'name', 'category', 'supplier', 'stock'];
+            box.innerHTML =
+                '<table><thead><tr>' + keys.map(k => '<th>' + k + '</th>').join('') + '<th>状态</th></tr></thead><tbody>' +
+                list.map(row =>
+                    '<tr>' + keys.map(k => '<td>' + (row[k] ?? '') + '</td>').join('') +
+                    '<td>' + stockBadge(row.stock) + '</td></tr>'
+                ).join('') + '</tbody></table>';
+        } catch (e) { show('warningTable', '加载预警列表失败: ' + e.message, true); }
+        return false;
+    }
+
+    // 5.11 商品发货
+    async function sendProduct() {
+        markActive('send');
+        const name = document.getElementById('sendName').value.trim();
+        if (!name) return show('sendResult', '请输入商品名', true);
+        if (!confirm('确认对商品「' + name + '」发货，库存将 -1 吗？')) return false;
+        try {
+            const data = await fetchJson('/api/purchase/send/single/product?' +
+                new URLSearchParams({ productName: name }).toString(), { method: 'PUT' });
+            show('sendResult', data.message || JSON.stringify(data, null, 2), !data.success);
+            loadAll();
+            loadStockWarning();
+        } catch (e) { show('sendResult', '发货失败: ' + e.message, true); }
+        return false;
+    }
+
+    // 5.12 商品审批
+    async function loadPending() {
+        markActive('pending');
+        try {
+            const list = await fetchJson('/api/purchase/pending');
+            const box = document.getElementById('pendingTable');
+            if (!list.length) { box.innerHTML = '<p>暂无待审核商品</p>'; return; }
+            const keys = ['id', 'name', 'price', 'stock', 'supplier', 'category'];
+            box.innerHTML =
+                '<table><thead><tr>' + keys.map(k => '<th>' + k + '</th>').join('') + '<th>操作</th></tr></thead><tbody>' +
+                list.map(row =>
+                    '<tr>' + keys.map(k => '<td>' + (row[k] ?? '') + '</td>').join('') +
+                    '<td><button onclick="approve(' + row.id + ', \'已通过\')">通过</button> ' +
+                    '<button onclick="approve(' + row.id + ', \'已驳回\')">驳回</button></td></tr>'
+                ).join('') + '</tbody></table>';
+        } catch (e) { show('pendingTable', '加载待审核列表失败: ' + e.message, true); }
+        return false;
+    }
+
+    async function approve(id, status) {
+        try {
+            const data = await fetchJson('/api/purchase/review?' + new URLSearchParams({ id, status }).toString(), { method: 'PUT' });
+            show('approvalResult', JSON.stringify(data, null, 2), !data.success);
+            loadPending();
+        } catch (e) { show('approvalResult', '审批失败: ' + e.message, true); }
+    }
+
+    // 6. 发表评论（后端已是 @PostMapping，用 POST + 表单提交）
+    async function addComment() {
+        const productName = document.getElementById('commentProductName').value.trim();
+        const content = document.getElementById('commentContent').value.trim();
+        if (!productName || !content)
+            return show('commentResult', '请输入商品名和评论内容', true);
+        try {
+            const data = await fetchJson('/api/purchase/comment/insert', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ productName, content }).toString()
+            });
+            show('commentResult', data.message || (data.success ? '评论插入成功' : '评论插入失败'), !data.success);
+            if (data.success) {
+                document.getElementById('commentContent').value = '';
+                document.getElementById('commentProductName').value = '';
+                loadComments();
+            }
+        } catch (e) { show('commentResult', '评论失败: ' + e.message, true); }
+    }
+
+    // 7. 加载评论列表(始终显示全部评论,不做商品名过滤)
+    async function loadComments() {
+        try {
+            const list = await fetchJson('/api/purchase/comment/list');
+            const box = document.getElementById('commentTable');
+            if (!list.length) { box.innerHTML = '<p>暂无评论</p>'; return; }
+            const keys = ['product_name', 'username', 'content', 'create_time'];
+            box.innerHTML =
+                '<table><thead><tr>' + keys.map(k => '<th>' + k + '</th>').join('') + '</tr></thead><tbody>' +
+                list.map(row => '<tr>' + keys.map(k => '<td>' + (row[k] ?? '') + '</td>').join('') + '</tr>').join('') +
+                '</tbody></table>';
+        } catch (e) { show('commentTable', '加载评论失败: ' + e.message, true); }
+    }
+
+    // 页面加载时检查登录状态
+    (async function init() {
+        try {
+            const data = await fetch('/api/auth/status');
+            const status = await data.json();
+            if (status.loggedIn) {
+                showMain(status.user);
+            } else {
+                showLogin();
+            }
+        } catch (e) {
+            showLogin();
+        }
+    })();
 </script>
 </body>
 </html>
