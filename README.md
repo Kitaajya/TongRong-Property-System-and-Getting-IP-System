@@ -609,6 +609,7 @@ spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 | 项目 | 信息 |
 |------|------|
 | **作者** | 贾奕嘉 |
+| **学校** | 中国地质大学·长城学院 |
 | **QQ邮箱** | 3662308525@qq.com |
 | **备用邮箱** | conandoyle1@qq.com |
 | **项目名称** | 通融物管 APP（TongRong Property Management） |
