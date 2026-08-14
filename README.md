@@ -394,7 +394,7 @@ mvnw.cmd spring-boot:run  # Windows
 
 ---
 
-## 五、API 测试示例
+## 五、API 接口测试示例（本机测试|暂时未制定固定url）
 
 ### 1. 用户注册
 ```bash
