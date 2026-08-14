@@ -1,5 +1,5 @@
 # 通融物管 APP (TongRong Property Management)
-## 完整项目说明书 v1.2.2
+## 完整项目说明书 v1.2.3
 
 ---
 
@@ -609,8 +609,10 @@ spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 | **QQ邮箱** | 3662308525@qq.com |
 | **备用邮箱** | conandoyle1@qq.com |
 | **项目名称** | 通融物管 APP（TongRong Property Management） |
-| **当前版本** | v1.2.2 (2026年8月9日 - 2026年8月12日) |
-| **许可协议** | MIT License |
+| **历史版本** | v1.2.1 (2026年7月27日 - 2026年8月4日) |
+| **历史版本** | v1.2.2 (2026年8月5日 - 2026年8月9日)  |
+| **当前版本** | v1.2.3 (2026年8月9日 - 2026年8月14日) |
+| **许可协议** | JYJ License |
 
 ---
 
