@@ -574,6 +574,7 @@ spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 | 文件数据导出 | ✅ 已完成 | v1.2.2 |
 | 物业管理端界面 | 🚧 规划中 | v2.0 |
 | 小程序/APP前端 | 🚧 规划中 | v3.0 |
+| 高并发 | 🚧 规划中 | v3.1 |
 
 ---
 
