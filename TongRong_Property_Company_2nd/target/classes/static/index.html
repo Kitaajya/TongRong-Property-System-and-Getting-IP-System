@@ -342,7 +342,11 @@
                 <p><input id="regUsername" placeholder="用户名(登录账号)" style="width:100%"></p>
                 <p><input id="regPassword" type="password" placeholder="密码(至少6位)" style="width:100%"></p>
                 <p><input id="regFullName" placeholder="真实姓名(选填)" style="width:100%"></p>
-                <p><input id="regEmail" placeholder="电子邮箱(选填)" style="width:100%"></p>
+                <p style="display:flex;gap:6px">
+                    <input id="regEmail" placeholder="电子邮箱(QQ邮箱)" style="flex:1;min-width:0">
+                    <button id="sendCodeBtn" onclick="sendCode()" type="button">发送验证码</button>
+                </p>
+                <p><input id="regCode" placeholder="邮箱验证码" style="width:100%"></p>
                 <p><input id="regPhone" placeholder="手机号码(选填)" style="width:100%"></p>
             </div>
             <p style="text-align:center">
@@ -848,9 +852,12 @@
             password: document.getElementById('regPassword').value,
             fullName: document.getElementById('regFullName').value.trim(),
             email: document.getElementById('regEmail').value.trim(),
+            emailCode: document.getElementById('regCode').value.trim(),
             phone: document.getElementById('regPhone').value.trim()
         };
         if (!p.username || !p.password) return show('authMsg', '请输入用户名和密码', true);
+        if (!p.email) return show('authMsg', '请填写QQ邮箱', true);
+        if (!p.emailCode) return show('authMsg', '请先获取并输入邮箱验证码', true);
         try {
             const data = await fetchJson('/api/auth/register', {
                 method: 'POST',
@@ -870,6 +877,48 @@
     async function logout() {
         try { await fetch('/api/auth/logout', { method: 'POST' }); } catch (e) { /* 忽略 */ }
         showLogin();
+    }
+
+    // 发送邮箱验证码 + 60秒倒计时
+    let codeTimer = null;
+    async function sendCode() {
+        const email = document.getElementById('regEmail').value.trim();
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
+            return show('authMsg', '请先填写正确的邮箱', true);
+        const btn = document.getElementById('sendCodeBtn');
+        btn.disabled = true;
+        try {
+            const data = await fetchJson('/api/auth/send-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ email }).toString()
+            });
+            show('authMsg', data.message || '验证码已发送', !data.success);
+            if (data.success) {
+                startCodeCountdown(btn);
+            } else {
+                btn.disabled = false;
+            }
+        } catch (e) {
+            show('authMsg', '发送失败: ' + e.message, true);
+            btn.disabled = false;
+        }
+    }
+
+    function startCodeCountdown(btn) {
+        if (codeTimer) clearInterval(codeTimer);
+        let left = 60;
+        btn.textContent = left + 's';
+        codeTimer = setInterval(() => {
+            left--;
+            if (left <= 0) {
+                clearInterval(codeTimer);
+                btn.textContent = '发送验证码';
+                btn.disabled = false;
+            } else {
+                btn.textContent = left + 's';
+            }
+        }, 1000);
     }
 
     // 导航高亮

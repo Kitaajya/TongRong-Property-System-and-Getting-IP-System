@@ -70,6 +70,3 @@ SELECT id, username, full_name, status FROM `users`;
 -- =============================================
 -- ALTER TABLE `users` ADD COLUMN `is_ordinary_user` TINYINT NULL DEFAULT 0
 --     COMMENT '是否商家:1-是,0-否(NULL按0处理)' AFTER `status`;
-UPDATE users
-set username='我是聪明人'
-where username='贾奕嘉';

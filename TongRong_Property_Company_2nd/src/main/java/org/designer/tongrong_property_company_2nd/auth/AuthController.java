@@ -33,6 +33,9 @@ public class AuthController {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private EmailCodeService emailCodeService;
+
     /**
      * 与数据库脚本一致的密码哈希：SHA2(明文密码 + salt, 256) 的小写十六进制
      */
@@ -48,11 +51,18 @@ public class AuthController {
         }
     }
 
+    // 发送邮箱验证码(注册时校验QQ邮箱)
+    @PostMapping("/send-code")
+    public Map<String, Object> sendCode(@RequestParam String email) {
+        return emailCodeService.sendCode(email);
+    }
+
     // 注册账号
     @PostMapping("/register")
     public Map<String, Object> register(@RequestParam String username,
                                         @RequestParam String password,
                                         @RequestParam(required = false) String email,
+                                        @RequestParam(required = false) String emailCode,
                                         @RequestParam(required = false) String fullName,
                                         @RequestParam(required = false) String phone,
                                         @RequestParam(required = false) Boolean isOrdinaryUser) {
@@ -66,9 +76,13 @@ public class AuthController {
 
         if (email != null && !email.isBlank()) {
             List<Map<String, Object>> emailExists =
-                    jdbcTemplate.queryForList("SELECT id FROM LogIn.users WHERE email = ?", email);
+                    jdbcTemplate.queryForList("SELECT id FROM LogIn.users WHERE email = ?", email.trim());
             if (!emailExists.isEmpty())
                 return Map.of("success", false, "message", "该邮箱已被注册");
+
+            String verifyMsg = emailCodeService.verify(email, emailCode);
+            if (verifyMsg != null)
+                return Map.of("success", false, "message", verifyMsg);
         }
 
         try {

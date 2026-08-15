@@ -290,7 +290,7 @@ public class PurchaseBase {
         return jdbcTemplate.queryForList(WARNING_SQL, threshold);
     }
 
-    //检查仓库库存是否到达n阈值，否则达到库存预警
+    /**检查仓库库存是否到达n阈值，否则达到库存预警**/
     @GetMapping("/check/stock")
     public Map<String, Object> checkStock(@RequestParam String productName) {
         if (isNullOrEmpty(productName))
@@ -322,7 +322,7 @@ public class PurchaseBase {
         return Map.of("success", true, "message", "准备发货，库存-1");
     }
 
-    //读取注册用户身份，如果是普通用户，对商品操作没有任何增删改的操作权限。商家有权限修改商品信息
+    /**读取注册用户身份，如果是普通用户，对商品操作没有任何增删改的操作权限。商家有权限修改商品信息**/
     @PutMapping("/identity/check")
     public Map<String,Object> revokeAndGrant(HttpServletRequest request){
         HttpSession session = request.getSession(false);
@@ -345,7 +345,7 @@ public class PurchaseBase {
                 .equals(Map.of("success", false, "message", "你没有任何权限修改商品", "canModify", false))){
             return Map.of("success", false, "message", "你没有任何权限修改商品", "canModify", false);
         }
-        //表中找不到人
+        /**表中找不到人**/
         String SET_RIGHT="UPDATE LogIn.users SET is_ordinary_user = 1 WHERE username=?";
         String IS_CONTAINS_NAME="SELECT username FROM LogIn.users WHERE username=?";
         if(jdbcTemplate.queryForList(IS_CONTAINS_NAME,nameWill).isEmpty())

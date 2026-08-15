@@ -342,7 +342,11 @@
                 <p><input id="regUsername" placeholder="用户名(登录账号)" style="width:100%"></p>
                 <p><input id="regPassword" type="password" placeholder="密码(至少6位)" style="width:100%"></p>
                 <p><input id="regFullName" placeholder="真实姓名(选填)" style="width:100%"></p>
-                <p><input id="regEmail" placeholder="电子邮箱(选填)" style="width:100%"></p>
+                <p style="display:flex;gap:6px">
+                    <input id="regEmail" placeholder="电子邮箱(QQ邮箱)" style="flex:1;min-width:0">
+                    <button id="sendCodeBtn" onclick="sendCode()" type="button">发送验证码</button>
+                </p>
+                <p><input id="regCode" placeholder="邮箱验证码" style="width:100%"></p>
                 <p><input id="regPhone" placeholder="手机号码(选填)" style="width:100%"></p>
             </div>
             <p style="text-align:center">
@@ -430,9 +434,8 @@
         <div class="sections">
 
     <!-- 浏览全部商品（默认折叠） -->
-    <section>
-        <div class="section-head">
-            <h2>全部商品</h2>
+    <section id="sec-all">
+        <h2>全部商品</h2>
             <div class="section-actions">
                 <button class="ghost" onclick="loadAll()">刷新商品列表</button>
                 <button class="ghost" id="allToggle" onclick="toggleAllProducts()">展开商品 ▸</button>
@@ -471,7 +474,7 @@
     </section>
 
     <!-- 查询单个商品 -->
-    <section>
+    <section id="sec-single">
         <h2>查询单个商品</h2>
         <input id="singleName" placeholder="商品名称">
         <button onclick="querySingle()">查询</button>
@@ -479,7 +482,7 @@
     </section>
 
     <!-- 模糊搜索 -->
-    <section>
+    <section id="sec-fuzzy">
         <h2>模糊搜索商品</h2>
         <input id="fuzzyName" placeholder="关键字（名称/描述/供应商）">
         <button onclick="fuzzySearch()">搜索</button>
@@ -487,7 +490,7 @@
     </section>
 
     <!-- 查询价格 -->
-    <section>
+    <section id="sec-price">
         <h2>价格查询</h2>
         <input id="singlePriceName" placeholder="单个商品名">
         <button onclick="querySinglePrice()">查单个价格</button>
@@ -497,7 +500,7 @@
     </section>
 
     <!-- 计算总价 -->
-    <section>
+    <section id="sec-total">
         <h2>计算总价</h2>
         <input id="totalNames" placeholder="商品名（可用逗号分隔）">
         <input id="totalQuantity" type="number" value="1" min="1">
@@ -506,7 +509,7 @@
     </section>
 
     <!-- 添加商品 -->
-    <section>
+    <section id="sec-add">
         <h2>添加商品</h2>
         <div>
             <input id="pName" placeholder="名称">
@@ -521,7 +524,7 @@
     </section>
 
     <!-- 批量添加商品 -->
-    <section>
+    <section id="sec-addMore">
         <h2>批量添加商品</h2>
         <div>
             <input id="mName" placeholder="名称">
@@ -537,7 +540,7 @@
     </section>
 
     <!-- 修改 / 删除商品 -->
-    <section>
+    <section id="sec-edit">
         <h2>修改 / 删除商品</h2>
         <div>
             <input id="eId" type="number" placeholder="商品ID">
@@ -554,7 +557,7 @@
     </section>
 
     <!-- 库存检查 -->
-    <section>
+    <section id="sec-checkStock">
         <h2>库存检查</h2>
         <input id="stockName" placeholder="商品名称">
         <button onclick="checkStock()">检查库存</button>
@@ -562,7 +565,7 @@
     </section>
 
     <!-- 库存预警 -->
-    <section>
+    <section id="sec-warning">
         <h2>库存预警</h2>
         <p class="section-tip">自动列出库存低于预警阈值（12）的商品</p>
         <button class="ghost" onclick="loadStockWarning()">刷新预警列表</button>
@@ -571,7 +574,7 @@
     </section>
 
     <!-- 商品发货 -->
-    <section>
+    <section id="sec-send">
         <h2>商品发货</h2>
         <p class="section-tip">发货后该商品库存 -1，库存低于阈值（12）将无法发货</p>
         <input id="sendName" placeholder="商品名称">
@@ -580,7 +583,7 @@
     </section>
 
     <!-- 商品审批 -->
-    <section>
+    <section id="sec-pending">
         <h2>商品审批</h2>
         <button class="ghost" onclick="loadPending()">刷新待审核列表</button>
         <div id="approvalResult" class="result"></div>
@@ -588,7 +591,7 @@
     </section>
 
     <!-- 员工列表 -->
-    <section>
+    <section id="sec-workers">
         <h2>员工列表</h2>
         <p class="section-tip">数据来源：Tongrong_Company.log_in 表</p>
         <button class="ghost" onclick="loadWorkers()">刷新员工列表</button>
@@ -596,7 +599,7 @@
     </section>
 
     <!-- 添加员工 -->
-    <section>
+    <section id="sec-addWorker">
         <h2>添加员工</h2>
         <div>
             <input id="wName" placeholder="姓名">
@@ -609,7 +612,7 @@
     </section>
 
     <!-- 修改员工 -->
-    <section>
+    <section id="sec-editWorker">
         <h2>修改员工</h2>
         <div>
             <input id="ewId" placeholder="员工ID">
@@ -623,7 +626,7 @@
     </section>
 
     <!-- 辞退员工 -->
-    <section>
+    <section id="sec-fireWorker">
         <h2>辞退员工</h2>
         <input id="fwId" placeholder="员工ID">
         <button class="danger" onclick="fireWorker()">辞退员工</button>
@@ -631,7 +634,7 @@
     </section>
 
     <!-- 查看数据表 -->
-    <section>
+    <section id="sec-tables">
         <h2>查看数据表</h2>
         <p class="section-tip">列出 Tongrong_Company 数据库中的全部表</p>
         <button class="ghost" onclick="loadTables()">刷新数据表列表</button>
@@ -640,21 +643,21 @@
     </section>
 
     <!-- 员工表 -->
-    <section>
+    <section id="sec-loginTable">
         <h2>员工表(log_in)</h2>
         <button class="ghost" onclick="loadLogInTable()">查看员工表数据</button>
         <div id="loginTableResult" class="result"></div>
     </section>
 
     <!-- 异常工资表 -->
-    <section>
+    <section id="sec-exceptionTable">
         <h2>异常工资表(exception_table_of_salary)</h2>
         <button class="ghost" onclick="loadExceptionTable()">查看异常工资数据</button>
         <div id="exceptionTableResult" class="result"></div>
     </section>
 
     <!-- 实名认证 -->
-    <section>
+    <section id="sec-cert">
         <h2>实名认证</h2>
         <p class="section-tip">通过姓名 + 身份证号查询实名认证信息</p>
         <div>
@@ -666,7 +669,7 @@
     </section>
 
     <!-- 查询指定表内容 -->
-    <section>
+    <section id="sec-dbSelect">
         <h2>查询指定表内容</h2>
         <p class="section-tip">按表名读取数据（后端会校验表名白名单）</p>
         <input id="tableName" placeholder="表名(如 log_in)">
@@ -675,7 +678,7 @@
     </section>
 
     <!-- 导出数据到文件 -->
-    <section>
+    <section id="sec-dbWrite">
         <h2>导出数据到文件</h2>
         <div>
             <input id="writePath" placeholder="文件路径(如 D:/export.txt)">
@@ -686,7 +689,7 @@
     </section>
 
     <!-- 身份检查 -->
-    <section>
+    <section id="sec-identityCheck">
         <h2>身份检查</h2>
         <p class="section-tip">判断当前登录用户是否为商家，商家才拥有商品增删改权限</p>
         <button class="ghost" onclick="checkIdentityPermission()">检查当前用户身份</button>
@@ -694,7 +697,7 @@
     </section>
 
     <!-- 设置商家权限 -->
-    <section>
+    <section id="sec-identitySet">
         <h2>设置商家权限</h2>
         <p class="section-tip">将指定用户名设置为商家（is_ordinary_user = 1）</p>
         <input id="setMerchantName" placeholder="要授予商家权限的用户名">
@@ -848,9 +851,12 @@
             password: document.getElementById('regPassword').value,
             fullName: document.getElementById('regFullName').value.trim(),
             email: document.getElementById('regEmail').value.trim(),
+            emailCode: document.getElementById('regCode').value.trim(),
             phone: document.getElementById('regPhone').value.trim()
         };
         if (!p.username || !p.password) return show('authMsg', '请输入用户名和密码', true);
+        if (!p.email) return show('authMsg', '请填写QQ邮箱', true);
+        if (!p.emailCode) return show('authMsg', '请先获取并输入邮箱验证码', true);
         try {
             const data = await fetchJson('/api/auth/register', {
                 method: 'POST',
@@ -872,11 +878,56 @@
         showLogin();
     }
 
+    // 发送邮箱验证码 + 60秒倒计时
+    let codeTimer = null;
+    async function sendCode() {
+        const email = document.getElementById('regEmail').value.trim();
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
+            return show('authMsg', '请先填写正确的邮箱', true);
+        const btn = document.getElementById('sendCodeBtn');
+        btn.disabled = true;
+        try {
+            const data = await fetchJson('/api/auth/send-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ email }).toString()
+            });
+            show('authMsg', data.message || '验证码已发送', !data.success);
+            if (data.success) {
+                startCodeCountdown(btn);
+            } else {
+                btn.disabled = false;
+            }
+        } catch (e) {
+            show('authMsg', '发送失败: ' + e.message, true);
+            btn.disabled = false;
+        }
+    }
+
+    function startCodeCountdown(btn) {
+        if (codeTimer) clearInterval(codeTimer);
+        let left = 60;
+        btn.textContent = left + 's';
+        codeTimer = setInterval(() => {
+            left--;
+            if (left <= 0) {
+                clearInterval(codeTimer);
+                btn.textContent = '发送验证码';
+                btn.disabled = false;
+            } else {
+                btn.textContent = left + 's';
+            }
+        }, 1000);
+    }
+
     // 导航高亮
     function markActive(key) {
         document.querySelectorAll('.nav a').forEach(a =>
             a.classList.toggle('active', a.getAttribute('data-nav') === key)
         );
+        // 点击左栏模块 -> 右栏平滑滚动到对应位置
+        const target = document.getElementById('sec-' + key);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     // 库存状态徽标

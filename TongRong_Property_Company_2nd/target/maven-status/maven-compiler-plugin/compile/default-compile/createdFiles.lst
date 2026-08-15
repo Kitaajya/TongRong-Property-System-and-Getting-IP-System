@@ -1,5 +1,7 @@
 org\designer\tongrong_property_company_2nd\auth\WebConfig.class
 org\designer\tongrong_property_company_2nd\auth\LoginInterceptor.class
+org\designer\tongrong_property_company_2nd\auth\EmailCodeService.class
+org\designer\tongrong_property_company_2nd\auth\EmailCodeService$CodeEntry.class
 org\designer\tongrong_property_company_2nd\auth\AuthController.class
 org\designer\tongrong_property_company_2nd\controller\FireWorker.class
 org\designer\tongrong_property_company_2nd\controller\SelectWorker.class
