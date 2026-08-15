@@ -166,6 +166,76 @@
         th { background: #f8fafc; color: var(--muted); font-weight: 600; }
         tbody tr:hover { background: #f8fafc; }
         tbody tr:nth-child(even) { background: #fafbfc; }
+        /* ===== 百度风格评论区 ===== */
+        .comment-wrap { max-width: 100%; }
+        .comment-head {
+            display: flex; justify-content: space-between; align-items: center;
+            padding-bottom: 14px; border-bottom: 1px solid #eee; margin-bottom: 16px;
+        }
+        .comment-head .total { font-size: 15px; color: #333; font-weight: bold; }
+        .sort-btn { font-size: 13px; color: #999; cursor: pointer; margin-left: 12px; user-select: none; }
+        .sort-btn.active { color: #2982FF; }
+        .comment-publish { display: flex; gap: 12px; margin-bottom: 20px; }
+        .avatar {
+            width: 40px; height: 40px; border-radius: 50%; background: #eee;
+            flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 18px; font-weight: 600; overflow: hidden;
+        }
+        .avatar-letter { background: linear-gradient(135deg, #60a5fa, #2982FF); }
+        .input-box { flex: 1; }
+        .publish-product { margin-bottom: 6px; }
+        .publish-product input {
+            width: 100%; padding: 8px 12px; border: 1px solid #eee; border-radius: 4px;
+            font-size: 14px; color: #333; outline: none; margin: 0;
+        }
+        .publish-product input:focus { border-color: #2982FF; }
+        .comment-textarea {
+            width: 100%; height: 80px; padding: 10px 12px; border: 1px solid #eee;
+            border-radius: 4px; resize: none; font-size: 14px; color: #333; outline: none;
+            margin: 0; box-sizing: border-box;
+        }
+        .comment-textarea:focus { border-color: #2982FF; }
+        .publish-bar { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 8px; }
+        .char-count { font-size: 12px; color: #bbb; }
+        .publish-btn {
+            margin: 0; padding: 6px 18px; background: #2982FF; color: #fff;
+            border: none; border-radius: 4px; cursor: pointer; font-size: 14px;
+            box-shadow: none;
+        }
+        .publish-btn:hover { background: #1a73e8; }
+        .publish-btn:disabled { background: #ccc; cursor: not-allowed; }
+        .comment-item { padding: 12px 0; border-bottom: 1px solid #eee; }
+        .comment-top { display: flex; gap: 12px; }
+        .comment-main { flex: 1; min-width: 0; }
+        .user-info { font-size: 14px; color: #333; }
+        .time { font-size: 12px; color: #999; margin-left: 8px; }
+        .comment-text { font-size: 14px; color: #333; margin: 8px 0; line-height: 1.6; word-break: break-word; }
+        .reply-btn { font-size: 12px; color: #999; cursor: pointer; display: inline-block; }
+        .reply-btn:hover { color: #2982FF; }
+        .empty-tip { text-align: center; padding: 40px 0; color: #999; font-size: 14px; }
+        .comment-msg { margin-top: 10px; font-size: 13px; }
+        .comment-msg.error { color: var(--danger); }
+        .comment-msg.ok { color: #15803d; }
+        .comment-actions { display: flex; gap: 12px; align-items: center; margin-top: 2px; }
+        .sub-reply-wrap { margin-top: 12px; margin-left: 52px; padding-left: 12px; border-left: 1px solid #eee; }
+        .sub-reply-list { margin-top: 8px; }
+        .sub-reply-item { padding: 6px 0; font-size: 14px; color: #333; line-height: 1.6; word-break: break-word; }
+        .sub-reply-item .time { font-size: 12px; margin-left: 8px; }
+        .sub-reply-item .reply-btn { margin-left: 10px; }
+        .mention { color: #2982FF; font-weight: 400; }
+        .more-reply { font-size: 12px; color: #2982FF; cursor: pointer; padding: 6px 0; user-select: none; }
+        .reply-input { margin-top: 10px; display: none; }
+        .reply-input textarea {
+            width: 100%; height: 60px; padding: 8px 12px; border: 1px solid #eee; border-radius: 4px;
+            resize: none; outline: none; font-size: 14px; box-sizing: border-box;
+        }
+        .reply-input textarea:focus { border-color: #2982FF; }
+        .reply-bar { margin-top: 6px; text-align: right; }
+        .reply-submit {
+            margin: 0; padding: 4px 12px; background: #2982FF; color: #fff;
+            border: none; border-radius: 4px; cursor: pointer; font-size: 12px; box-shadow: none;
+        }
+        .reply-submit:hover { background: #1a73e8; }
         .result {
             margin-top: 10px; padding: 12px;
             background: #f8fafc; border: 1px solid var(--border); border-radius: 8px;
@@ -186,6 +256,10 @@
         }
         h2 { position: relative; }
         .section-tip { margin: 6px 0 10px; font-size: 12px; color: var(--muted); }
+        .section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+        .section-head h2 { margin: 0; }
+        .section-actions { display: flex; gap: 4px; flex-wrap: wrap; }
+        .collapsible.collapsed { display: none; }
 
         /* 状态徽标 */
         .badge {
@@ -245,6 +319,7 @@
             .sidebar { width: 100%; min-width: 0; }
             .content { padding: 14px; }
             .clock-box { display: none; }
+            .sub-reply-wrap { margin-left: 44px; }
         }
     </style>
 </head>
@@ -307,6 +382,33 @@
                 <a href="#" data-nav="pending" onclick="return loadPending()">商品审批</a>
             </nav>
         </div>
+        <div>
+            <h3 class="menu-title">员工管理</h3>
+            <nav class="nav">
+                <a href="#" data-nav="workers" onclick="return loadWorkers()">员工列表</a>
+                <a href="#" data-nav="addWorker" onclick="return addWorker()">添加员工</a>
+                <a href="#" data-nav="editWorker" onclick="return editWorker()">修改员工</a>
+                <a href="#" data-nav="fireWorker" onclick="return fireWorker()">辞退员工</a>
+            </nav>
+        </div>
+        <div>
+            <h3 class="menu-title">数据库浏览</h3>
+            <nav class="nav">
+                <a href="#" data-nav="tables" onclick="return loadTables()">查看数据表</a>
+                <a href="#" data-nav="loginTable" onclick="return loadLogInTable()">员工表</a>
+                <a href="#" data-nav="exceptionTable" onclick="return loadExceptionTable()">异常工资表</a>
+                <a href="#" data-nav="dbSelect" onclick="return selectDatabaseName()">查询表内容</a>
+                <a href="#" data-nav="dbWrite" onclick="return writeToFile()">导出到文件</a>
+            </nav>
+        </div>
+        <div>
+            <h3 class="menu-title">权限与认证</h3>
+            <nav class="nav">
+                <a href="#" data-nav="cert" onclick="return checkIdentity()">实名认证</a>
+                <a href="#" data-nav="identityCheck" onclick="return checkIdentityPermission()">身份检查</a>
+                <a href="#" data-nav="identitySet" onclick="return setMerchantPermission()">设置商家权限</a>
+            </nav>
+        </div>
     </aside>
     <main class="content">
         <div class="weather-card">
@@ -327,11 +429,45 @@
         </div>
         <div class="sections">
 
-    <!-- 浏览全部商品 -->
+    <!-- 浏览全部商品（默认折叠） -->
     <section>
-        <h2>全部商品</h2>
-        <button class="ghost" onclick="loadAll()">刷新商品列表</button>
-        <div id="allTable"></div>
+        <div class="section-head">
+            <h2>全部商品</h2>
+            <div class="section-actions">
+                <button class="ghost" onclick="loadAll()">刷新商品列表</button>
+                <button class="ghost" id="allToggle" onclick="toggleAllProducts()">展开商品 ▸</button>
+            </div>
+        </div>
+        <div id="allTable" class="collapsible collapsed"></div>
+    </section>
+
+    <!-- 所有评论（百度风格） -->
+    <section>
+        <h2>所有评论</h2>
+        <div class="comment-wrap">
+            <div class="comment-head">
+                <div class="total">全部评论(<span id="commentTotal">0</span>)</div>
+                <div class="sort-box">
+                    <span class="sort-btn active" data-type="old" onclick="setCommentSort(this)">最早</span>
+                    <span class="sort-btn" data-type="new" onclick="setCommentSort(this)">最新</span>
+                </div>
+            </div>
+            <div class="comment-publish">
+                <div class="avatar avatar-letter" id="publishAvatar"></div>
+                <div class="input-box">
+                    <div class="publish-product">
+                        <input id="commentProductName" placeholder="给哪个商品发评论，如：苹果">
+                    </div>
+                    <textarea id="commentContent" class="comment-textarea" maxlength="500" placeholder="请输入评论内容（最多500字）"></textarea>
+                    <div class="publish-bar">
+                        <span class="char-count" id="commentCount">0/500</span>
+                        <button class="publish-btn" id="publishBtn" onclick="addComment()" disabled>发布</button>
+                    </div>
+                </div>
+            </div>
+            <div id="commentList"></div>
+            <div id="commentResult" class="comment-msg hidden"></div>
+        </div>
     </section>
 
     <!-- 查询单个商品 -->
@@ -451,17 +587,119 @@
         <div id="pendingTable"></div>
     </section>
 
-    <!-- 查看所有评论 -->
+    <!-- 员工列表 -->
     <section>
-        <h2>所有评论</h2>
+        <h2>员工列表</h2>
+        <p class="section-tip">数据来源：Tongrong_Company.log_in 表</p>
+        <button class="ghost" onclick="loadWorkers()">刷新员工列表</button>
+        <div id="workerTable"></div>
+    </section>
+
+    <!-- 添加员工 -->
+    <section>
+        <h2>添加员工</h2>
         <div>
-            <input id="commentProductName" placeholder="给哪个商品发评论(仅发表时用)">
-            <textarea id="commentContent" rows="3" placeholder="请输入评论内容" style="width:100%;box-sizing:border-box;margin:4px 0"></textarea>
-            <button onclick="addComment()">发表评论</button>
-            <button class="ghost" onclick="loadComments()">查看所有评论</button>
+            <input id="wName" placeholder="姓名">
+            <input id="wDepartment" placeholder="部门">
+            <input id="wGender" placeholder="性别">
+            <input id="wWork" placeholder="职务">
+            <button onclick="addWorker()">添加员工</button>
         </div>
-        <div id="commentResult" class="result"></div>
-        <div id="commentTable"></div>
+        <div id="addWorkerResult" class="result"></div>
+    </section>
+
+    <!-- 修改员工 -->
+    <section>
+        <h2>修改员工</h2>
+        <div>
+            <input id="ewId" placeholder="员工ID">
+            <input id="ewName" placeholder="姓名">
+            <input id="ewDepartment" placeholder="部门">
+            <input id="ewGender" placeholder="性别">
+            <input id="ewWork" placeholder="职务">
+            <button onclick="editWorker()">修改员工</button>
+        </div>
+        <div id="editWorkerResult" class="result"></div>
+    </section>
+
+    <!-- 辞退员工 -->
+    <section>
+        <h2>辞退员工</h2>
+        <input id="fwId" placeholder="员工ID">
+        <button class="danger" onclick="fireWorker()">辞退员工</button>
+        <div id="fireWorkerResult" class="result"></div>
+    </section>
+
+    <!-- 查看数据表 -->
+    <section>
+        <h2>查看数据表</h2>
+        <p class="section-tip">列出 Tongrong_Company 数据库中的全部表</p>
+        <button class="ghost" onclick="loadTables()">刷新数据表列表</button>
+        <div id="tablesResult" class="result"></div>
+        <div id="tablesTable"></div>
+    </section>
+
+    <!-- 员工表 -->
+    <section>
+        <h2>员工表(log_in)</h2>
+        <button class="ghost" onclick="loadLogInTable()">查看员工表数据</button>
+        <div id="loginTableResult" class="result"></div>
+    </section>
+
+    <!-- 异常工资表 -->
+    <section>
+        <h2>异常工资表(exception_table_of_salary)</h2>
+        <button class="ghost" onclick="loadExceptionTable()">查看异常工资数据</button>
+        <div id="exceptionTableResult" class="result"></div>
+    </section>
+
+    <!-- 实名认证 -->
+    <section>
+        <h2>实名认证</h2>
+        <p class="section-tip">通过姓名 + 身份证号查询实名认证信息</p>
+        <div>
+            <input id="certName" placeholder="姓名">
+            <input id="certNumber" placeholder="身份证号">
+            <button onclick="checkIdentity()">实名认证</button>
+        </div>
+        <div id="certResult" class="result"></div>
+    </section>
+
+    <!-- 查询指定表内容 -->
+    <section>
+        <h2>查询指定表内容</h2>
+        <p class="section-tip">按表名读取数据（后端会校验表名白名单）</p>
+        <input id="tableName" placeholder="表名(如 log_in)">
+        <button onclick="selectDatabaseName()">查询表内容</button>
+        <div id="selectDbResult" class="result"></div>
+    </section>
+
+    <!-- 导出数据到文件 -->
+    <section>
+        <h2>导出数据到文件</h2>
+        <div>
+            <input id="writePath" placeholder="文件路径(如 D:/export.txt)">
+            <input id="writeTable" placeholder="表名(如 log_in)">
+            <button onclick="writeToFile()">写入文件</button>
+        </div>
+        <div id="writeFileResult" class="result"></div>
+    </section>
+
+    <!-- 身份检查 -->
+    <section>
+        <h2>身份检查</h2>
+        <p class="section-tip">判断当前登录用户是否为商家，商家才拥有商品增删改权限</p>
+        <button class="ghost" onclick="checkIdentityPermission()">检查当前用户身份</button>
+        <div id="identityCheckResult" class="result"></div>
+    </section>
+
+    <!-- 设置商家权限 -->
+    <section>
+        <h2>设置商家权限</h2>
+        <p class="section-tip">将指定用户名设置为商家（is_ordinary_user = 1）</p>
+        <input id="setMerchantName" placeholder="要授予商家权限的用户名">
+        <button onclick="setMerchantPermission()">设置商家权限</button>
+        <div id="identitySetResult" class="result"></div>
     </section>
         </div>
     </main>
@@ -513,7 +751,8 @@
         document.getElementById('logoutBtn').classList.remove('hidden');
         const fullName = (user && user.fullName) ? user.fullName + '（' + user.username + '）' : (user ? user.username : '');
         document.getElementById('userInfo').textContent = '当前用户：' + fullName;
-        loadAll();
+        const av = document.getElementById('publishAvatar');
+        if (av && user && user.username) av.textContent = String(user.username)[0];
         loadWeather();
         startClock();
         loadComments();
@@ -652,9 +891,12 @@
     // 1. 全部商品
     async function loadAll() {
         markActive('all');
+        const box = document.getElementById('allTable');
+        box.classList.remove('collapsed');
+        const btn = document.getElementById('allToggle');
+        if (btn) btn.textContent = '收起商品 ▾';
         try {
             const list = await fetchJson('/api/purchase/travel');
-            const box = document.getElementById('allTable');
             if (!list.length) { box.innerHTML = '<p>暂无商品</p>'; return false; }
             const keys = Object.keys(list[0]);
             const hasStock = keys.includes('stock');
@@ -666,6 +908,18 @@
                 ).join('') + '</tbody></table>';
             return false;
         } catch (e) { show('allTable', '加载失败: ' + e.message, true); return false; }
+    }
+
+    // 折叠/展开全部商品区域
+    function toggleAllProducts() {
+        const box = document.getElementById('allTable');
+        const btn = document.getElementById('allToggle');
+        const collapsed = box.classList.toggle('collapsed');
+        btn.textContent = collapsed ? '展开商品 ▸' : '收起商品 ▾';
+        if (!collapsed && !box.dataset.loaded) {
+            box.dataset.loaded = '1';
+            loadAll();
+        }
     }
 
     // 2. 查询单个商品
@@ -887,43 +1141,397 @@
         } catch (e) { show('approvalResult', '审批失败: ' + e.message, true); }
     }
 
-    // 6. 发表评论（后端已是 @PostMapping，用 POST + 表单提交）
-    async function addComment() {
-        const productName = document.getElementById('commentProductName').value.trim();
+    // 文本转义，防止 HTML 注入
+    function escapeHtml(s) {
+        return String(s ?? '').replace(/[&<>"']/g, c =>
+            ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+    }
+
+    // 首字头像
+    function letterAvatar(name) {
+        const ch = String(name ?? '匿')[0];
+        return '<div class="avatar avatar-letter">' + escapeHtml(ch) + '</div>';
+    }
+
+    // 评论输入状态联动
+    function updatePublishBtn() {
+        const btn = document.getElementById('publishBtn');
         const content = document.getElementById('commentContent').value.trim();
-        if (!productName || !content)
-            return show('commentResult', '请输入商品名和评论内容', true);
+        const product = document.getElementById('commentProductName').value.trim();
+        if (btn) btn.disabled = !(content && product);
+        const count = document.getElementById('commentCount');
+        if (count) count.textContent = document.getElementById('commentContent').value.length + '/500';
+    }
+
+    // 评论排序切换(最早在前 / 最新在前)
+    let commentSort = 'old';
+    function setCommentSort(el) {
+        document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+        commentSort = el.dataset.type;
+        loadComments();
+    }
+
+    // 评论提示消息(3秒后自动消失)
+    function flashCommentMsg(text, isError) {
+        const el = document.getElementById('commentResult');
+        el.textContent = text;
+        el.className = 'comment-msg ' + (isError ? 'error' : 'ok');
+        clearTimeout(el._timer);
+        el._timer = setTimeout(() => { el.className = 'comment-msg hidden'; }, 3000);
+    }
+
+    // 解析评论内容中的回复标记：[回复#父ID]@用户名 内容
+    function parseComment(c) {
+        const m = /^\[回复#(\d+)\](?:@(\S+))?\s*([\s\S]*)$/.exec(String(c.content ?? ''));
+        if (m) {
+            return {
+                id: c.id, product_name: c.product_name, username: c.username,
+                create_time: c.create_time, parentId: Number(m[1]),
+                mention: m[2] || '', text: m[3] || ''
+            };
+        }
+        return {
+            id: c.id, product_name: c.product_name, username: c.username,
+            create_time: c.create_time, parentId: null, mention: '', text: c.content ?? ''
+        };
+    }
+
+    // 渲染评论列表：主评论 + 楼中楼嵌套，回复默认折叠
+    function renderComments(list) {
+        const box = document.getElementById('commentList');
+        const totalEl = document.getElementById('commentTotal');
+        if (totalEl) totalEl.textContent = list.length;
+        if (!list.length) { box.innerHTML = '<div class="empty-tip">暂无评论，快来抢占首评</div>'; return; }
+
+        const parsed = list.map(parseComment);
+        // 最早在前(id升序) / 最新在前(id降序)，回复跟随同一顺序
+        parsed.sort((a, b) => commentSort === 'new' ? b.id - a.id : a.id - b.id);
+        const byParent = {};
+        parsed.forEach(c => { if (c.parentId !== null) (byParent[c.parentId] = byParent[c.parentId] || []).push(c); });
+
+        // 主评论：无父楼层 或 父楼层已不存在(孤儿回复当主评论展示，避免丢失)
+        const mains = parsed.filter(c => c.parentId === null ||
+            !parsed.some(p => p.id === c.parentId && p.parentId === null));
+
+        box.innerHTML = mains.map(main => {
+            const replies = byParent[main.id] || [];
+            const isExpanded = expandedReplies.has(main.id);
+            const subToggle = replies.length
+                ? '<div class="more-reply" id="subToggle_' + main.id + '" onclick="toggleSubReplies(' + main.id + ')">' + (isExpanded ? '收起回复 ▾' : '展开 ' + replies.length + ' 条回复 ▸') + '</div>'
+                : '';
+            const subList = replies.length
+                ? '<div class="sub-reply-list" id="subList_' + main.id + '" style="' + (isExpanded ? 'display:block' : 'display:none') + '">' +
+                    replies.map(r =>
+                        '<div class="sub-reply-item">' +
+                            '<strong>' + escapeHtml(r.username) + '</strong>' +
+                            (r.mention ? ' 回复 <strong class="mention">@' + escapeHtml(r.mention) + '</strong>' : '') +
+                            '：' + escapeHtml(r.text) +
+                            '<span class="time">' + escapeHtml(r.create_time) + '</span>' +
+                            '<span class="reply-btn" onclick="toggleReplyInput(' + main.id + ', ' + quoteJs(r.username) + ')">回复</span>' +
+                        '</div>'
+                    ).join('') +
+                  '</div>'
+                : '';
+            const replyInput = '<div class="reply-input" id="replyInput_' + main.id + '" data-product="' + escapeHtml(main.product_name) + '">' +
+                '<textarea maxlength="450" placeholder="回复 @' + escapeHtml(main.username) + '"></textarea>' +
+                '<div class="reply-bar"><button class="reply-submit" onclick="submitReply(' + main.id + ')">提交回复</button></div>' +
+              '</div>';
+
+            return '<div class="comment-item">' +
+                '<div class="comment-top">' +
+                    letterAvatar(main.username) +
+                    '<div class="comment-main">' +
+                        '<div class="user-info">' + escapeHtml(main.username) + '<span class="time">' + escapeHtml(main.create_time) + '</span></div>' +
+                        '<div class="comment-text">' + escapeHtml(main.text) + '</div>' +
+                        '<div class="comment-actions"><span class="reply-btn" onclick="toggleReplyInput(' + main.id + ', ' + quoteJs(main.username) + ')">回复</span></div>' +
+                    '</div>' +
+                '</div>' +
+                subToggle + subList + replyInput +
+            '</div>';
+        }).join('');
+    }
+
+    // 展开/折叠楼中楼回复（默认折叠）
+    const expandedReplies = new Set();
+    function toggleSubReplies(mainId) {
+        const list = document.getElementById('subList_' + mainId);
+        if (!list) return;
+        const tog = document.getElementById('subToggle_' + mainId);
+        const hidden = list.style.display !== 'block';
+        list.style.display = hidden ? 'block' : 'none';
+        if (hidden) expandedReplies.add(mainId); else expandedReplies.delete(mainId);
+        const n = list.querySelectorAll('.sub-reply-item').length;
+        if (tog) tog.textContent = hidden ? '收起回复 ▾' : '展开 ' + n + ' 条回复 ▸';
+    }
+
+    // 打开/关闭某条主评论的内联回复框
+    function toggleReplyInput(mainId, name) {
+        const box = document.getElementById('replyInput_' + mainId);
+        if (!box) return;
+        const ta = box.querySelector('textarea');
+        const shown = box.style.display === 'block';
+        if (shown) { box.style.display = 'none'; return; }
+        ta.dataset.mention = name || '';
+        ta.placeholder = '回复 @' + name;
+        box.style.display = 'block';
+        ta.focus();
+    }
+
+    // 提交楼中楼回复：内容埋 [回复#父ID]@对方 标记，前端解析归属
+    async function submitReply(mainId) {
+        const box = document.getElementById('replyInput_' + mainId);
+        const ta = box.querySelector('textarea');
+        const text = ta.value.trim();
+        if (!text) return;
+        const mention = ta.dataset.mention || '';
+        const productName = box.dataset.product;
+        const content = '[回复#' + mainId + ']' + (mention ? '@' + mention + ' ' : '') + text;
         try {
             const data = await fetchJson('/api/purchase/comment/insert', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams({ productName, content }).toString()
             });
-            show('commentResult', data.message || (data.success ? '评论插入成功' : '评论插入失败'), !data.success);
             if (data.success) {
+                box.style.display = 'none';
+                ta.value = '';
+                expandedReplies.add(mainId);
+                loadComments();
+            } else {
+                flashCommentMsg(data.message || '回复失败', true);
+            }
+        } catch (e) { flashCommentMsg('回复失败: ' + e.message, true); }
+    }
+
+    // 6. 发表评论（后端已是 @PostMapping，用 POST + 表单提交）
+    async function addComment() {
+        const productName = document.getElementById('commentProductName').value.trim();
+        const content = document.getElementById('commentContent').value.trim();
+        if (!productName || !content)
+            return flashCommentMsg('请输入商品名和评论内容', true);
+        try {
+            const data = await fetchJson('/api/purchase/comment/insert', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ productName, content }).toString()
+            });
+            if (data.success) {
+                flashCommentMsg(data.message || '评论插入成功', false);
                 document.getElementById('commentContent').value = '';
                 document.getElementById('commentProductName').value = '';
+                updatePublishBtn();
                 loadComments();
+            } else {
+                flashCommentMsg(data.message || '评论插入失败', true);
             }
-        } catch (e) { show('commentResult', '评论失败: ' + e.message, true); }
+        } catch (e) { flashCommentMsg('评论失败: ' + e.message, true); }
     }
 
     // 7. 加载评论列表(始终显示全部评论,不做商品名过滤)
     async function loadComments() {
         try {
             const list = await fetchJson('/api/purchase/comment/list');
-            const box = document.getElementById('commentTable');
-            if (!list.length) { box.innerHTML = '<p>暂无评论</p>'; return; }
-            const keys = ['product_name', 'username', 'content', 'create_time'];
-            box.innerHTML =
-                '<table><thead><tr>' + keys.map(k => '<th>' + k + '</th>').join('') + '</tr></thead><tbody>' +
-                list.map(row => '<tr>' + keys.map(k => '<td>' + (row[k] ?? '') + '</td>').join('') + '</tr>').join('') +
-                '</tbody></table>';
-        } catch (e) { show('commentTable', '加载评论失败: ' + e.message, true); }
+            renderComments(list);
+        } catch (e) { show('commentList', '加载评论失败: ' + e.message, true); }
+    }
+
+    // 生成 JS 字符串字面量(带转义)
+    function quoteJs(s) {
+        return "'" + String(s ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
+    }
+
+    // 通用表格渲染
+    function tableHtml(list) {
+        if (!list || !list.length) return '';
+        const keys = Object.keys(list[0]);
+        return '<table><thead><tr>' + keys.map(k => '<th>' + k + '</th>').join('') + '</tr></thead><tbody>' +
+            list.map(row => '<tr>' + keys.map(k => '<td>' + (row[k] ?? '') + '</td>').join('') + '</tr>').join('') +
+            '</tbody></table>';
+    }
+
+    // 8. 员工列表
+    async function loadWorkers() {
+        markActive('workers');
+        try {
+            const list = await fetchJson('/api/select');
+            const box = document.getElementById('workerTable');
+            if (!list.length) { box.innerHTML = '<p>暂无员工</p>'; return false; }
+            box.innerHTML = tableHtml(list);
+        } catch (e) { show('workerTable', '加载员工失败: ' + e.message, true); }
+        return false;
+    }
+
+    // 9. 添加员工
+    async function addWorker() {
+        markActive('addWorker');
+        const p = {
+            name: document.getElementById('wName').value.trim(),
+            department: document.getElementById('wDepartment').value.trim(),
+            gender: document.getElementById('wGender').value.trim(),
+            work: document.getElementById('wWork').value.trim()
+        };
+        if (!p.name || !p.department || !p.gender || !p.work)
+            return show('addWorkerResult', '请填写姓名/部门/性别/职务', true);
+        try {
+            const rows = await fetchJson('/api/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams(p).toString()
+            });
+            show('addWorkerResult', rows > 0 ? '添加成功' : '添加失败', rows <= 0);
+            if (rows > 0) {
+                ['wName', 'wDepartment', 'wGender', 'wWork'].forEach(id => document.getElementById(id).value = '');
+                loadWorkers();
+            }
+        } catch (e) { show('addWorkerResult', '添加失败: ' + e.message, true); }
+    }
+
+    // 10. 修改员工
+    async function editWorker() {
+        markActive('editWorker');
+        const p = {
+            id: document.getElementById('ewId').value.trim(),
+            name: document.getElementById('ewName').value.trim(),
+            department: document.getElementById('ewDepartment').value.trim(),
+            gender: document.getElementById('ewGender').value.trim(),
+            work: document.getElementById('ewWork').value.trim()
+        };
+        if (!p.id || !p.name || !p.department || !p.gender || !p.work)
+            return show('editWorkerResult', '请填写ID/姓名/部门/性别/职务', true);
+        try {
+            const rows = await fetchJson('/api/edit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams(p).toString()
+            });
+            show('editWorkerResult', rows > 0 ? '修改成功' : '修改失败(可能ID不存在)', rows <= 0);
+            if (rows > 0) loadWorkers();
+        } catch (e) { show('editWorkerResult', '修改失败: ' + e.message, true); }
+    }
+
+    // 11. 辞退员工
+    async function fireWorker() {
+        markActive('fireWorker');
+        const id = document.getElementById('fwId').value.trim();
+        if (!id) return show('fireWorkerResult', '请输入员工ID', true);
+        if (!confirm('确定辞退员工(ID=' + id + ') 吗？')) return;
+        try {
+            const rows = await fetchJson('/api/delete?id=' + encodeURIComponent(id));
+            show('fireWorkerResult', rows > 0 ? '辞退成功' : '辞退失败(可能ID不存在)', rows <= 0);
+            if (rows > 0) { document.getElementById('fwId').value = ''; loadWorkers(); }
+        } catch (e) { show('fireWorkerResult', '辞退失败: ' + e.message, true); }
+    }
+
+    // 12. 查看数据表
+    async function loadTables() {
+        markActive('tables');
+        try {
+            const list = await fetchJson('/api/tables');
+            show('tablesResult', '共 ' + list.length + ' 张表');
+            document.getElementById('tablesTable').innerHTML = tableHtml(list);
+        } catch (e) { show('tablesTable', '加载失败: ' + e.message, true); }
+        return false;
+    }
+
+    // 13. 员工表数据
+    async function loadLogInTable() {
+        markActive('loginTable');
+        try {
+            const list = await fetchJson('/api/travel_log_in');
+            const box = document.getElementById('loginTableResult');
+            box.innerHTML = list.length ? tableHtml(list) : '<p>空表</p>';
+        } catch (e) { show('loginTableResult', '加载失败: ' + e.message, true); }
+        return false;
+    }
+
+    // 14. 异常工资表数据
+    async function loadExceptionTable() {
+        markActive('exceptionTable');
+        try {
+            const list = await fetchJson('/api/travel_exception');
+            const box = document.getElementById('exceptionTableResult');
+            box.innerHTML = list.length ? tableHtml(list) : '<p>空表</p>';
+        } catch (e) { show('exceptionTableResult', '加载失败: ' + e.message, true); }
+        return false;
+    }
+
+    // 15. 实名认证
+    async function checkIdentity() {
+        markActive('cert');
+        const name = document.getElementById('certName').value.trim();
+        const personalNumber = document.getElementById('certNumber').value.trim();
+        if (!name || !personalNumber) return show('certResult', '请输入姓名和身份证号', true);
+        try {
+            const list = await fetchJson('/api/permission/get?name=' + encodeURIComponent(name) +
+                '&personalNumber=' + encodeURIComponent(personalNumber));
+            if (!list.length) { show('certResult', '认证失败：未找到匹配的实名信息'); return false; }
+            show('certResult', '认证成功，匹配到 ' + list.length + ' 条记录：\n' + JSON.stringify(list, null, 2));
+        } catch (e) { show('certResult', '认证失败: ' + e.message, true); }
+        return false;
+    }
+
+    // 16. 查询指定表内容(返回纯文本)
+    async function selectDatabaseName() {
+        markActive('dbSelect');
+        const name = document.getElementById('tableName').value.trim();
+        if (!name) return show('selectDbResult', '请输入表名', true);
+        try {
+            const resp = await fetch('/api/operate/select/database/name?nameOfPointedDatabaseName=' + encodeURIComponent(name));
+            if (resp.status === 401) { showLogin(); return false; }
+            const text = await resp.text();
+            if (!resp.ok) { show('selectDbResult', text, true); return false; }
+            show('selectDbResult', text);
+        } catch (e) { show('selectDbResult', '查询失败: ' + e.message, true); }
+        return false;
+    }
+
+    // 17. 导出数据到文件
+    async function writeToFile() {
+        markActive('dbWrite');
+        const path = document.getElementById('writePath').value.trim();
+        const table = document.getElementById('writeTable').value.trim();
+        if (!path || !table) return show('writeFileResult', '请输入文件路径和表名', true);
+        try {
+            const resp = await fetch('/api/operate/write?path=' + encodeURIComponent(path) +
+                '&nameOfPointedDatabase=' + encodeURIComponent(table));
+            if (resp.status === 401) { showLogin(); return false; }
+            const text = await resp.text();
+            if (!resp.ok) { show('writeFileResult', text, true); return false; }
+            show('writeFileResult', text);
+        } catch (e) { show('writeFileResult', '写入失败: ' + e.message, true); }
+        return false;
+    }
+
+    // 18. 身份检查(是否商家)
+    async function checkIdentityPermission() {
+        markActive('identityCheck');
+        try {
+            const data = await fetchJson('/api/purchase/identity/check', { method: 'PUT' });
+            show('identityCheckResult', (data.message || JSON.stringify(data, null, 2)) +
+                (data.canModify ? '（拥有商品修改权限）' : '（无商品修改权限）'), !data.success);
+        } catch (e) { show('identityCheckResult', '检查失败: ' + e.message, true); }
+        return false;
+    }
+
+    // 19. 设置商家权限
+    async function setMerchantPermission() {
+        markActive('identitySet');
+        const nameWill = document.getElementById('setMerchantName').value.trim();
+        if (!nameWill) return show('identitySetResult', '请输入用户名', true);
+        try {
+            const data = await fetchJson('/api/purchase/identity/set?nameWill=' + encodeURIComponent(nameWill), { method: 'PUT' });
+            show('identitySetResult', data.message || JSON.stringify(data, null, 2), !data.success);
+        } catch (e) { show('identitySetResult', '设置失败: ' + e.message, true); }
+        return false;
     }
 
     // 页面加载时检查登录状态
     (async function init() {
+        const contentInput = document.getElementById('commentContent');
+        const productInput = document.getElementById('commentProductName');
+        if (contentInput) contentInput.addEventListener('input', updatePublishBtn);
+        if (productInput) productInput.addEventListener('input', updatePublishBtn);
         try {
             const data = await fetch('/api/auth/status');
             const status = await data.json();

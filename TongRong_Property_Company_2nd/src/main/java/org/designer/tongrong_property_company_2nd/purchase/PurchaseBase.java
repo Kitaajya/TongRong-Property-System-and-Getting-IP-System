@@ -67,7 +67,7 @@ public class PurchaseBase {
                 "%" + undefinedName + "%",
                 "%" + undefinedName + "%");
     }
-
+    //添加单个商品
     @PostMapping("/add/single/product")
     public Map<String, Object> addSingleProduct(@RequestParam String productsName,
                                                 @RequestParam String productsCategory,
@@ -75,6 +75,7 @@ public class PurchaseBase {
                                                 @RequestParam int productsStock,
                                                 @RequestParam String productsSupplier,
                                                 @RequestParam String productsDescription) {
+        log.info("添加单个商品");
         if (productsName.isEmpty() || productsCategory.isEmpty() || productsSupplier.isEmpty() || productsDescription.isEmpty())
             return Map.of("success", false, "message", "商品信息无效");
         String INSERT_Single_Product =
@@ -86,7 +87,7 @@ public class PurchaseBase {
         else return Map.of("success", false, "message", "商品添加失败");
     }
 
-    //
+    //添加更多商品
     @PostMapping("/add/more/product")
     public Map<String, Object> addMoreProduct(@RequestParam String productsName,
                                               @RequestParam String productsCategory,
@@ -95,6 +96,7 @@ public class PurchaseBase {
                                               @RequestParam String productsSupplier,
                                               @RequestParam String productsDescription,
                                               @RequestParam int quantity) {
+        log.info("添加更多商品");
         if (quantity <= 0) return Map.of("success", false, "message", "商品个数必须是大于零的数！");
         String insertMoreProduct =
                 "INSERT INTO PurchaseBase.products (name, price, description, supplier, category, stock, create_time, update_time) " +
@@ -113,6 +115,7 @@ public class PurchaseBase {
     //查询单个商品的价格
     @GetMapping("/select/single/product/price")
     public List<Map<String, Object>> selectOfSinglePrice(@RequestParam String productName) {
+        log.info("查询单个商品的价格");
         if (isNullOrEmpty(productName))
             return List.of(Map.of("success", false, "message", "商品信息无效"));
         String selectProduct = "select price from PurchaseBase.products where name = ?";
@@ -122,6 +125,7 @@ public class PurchaseBase {
     //查询更多商品的价格
     @GetMapping("/select/more/product/price")
     public List<Map<String, Object>> selectMoreProductsPrices(@RequestParam String productsName) {
+        log.info("查询更多商品的价格");
         if (isNullOrEmpty(productsName)) return new ArrayList<>();
         String selectPrices = "select price from PurchaseBase.products where name = ?";
         List<Map<String, Object>> PRICE = new ArrayList<>();
@@ -139,6 +143,7 @@ public class PurchaseBase {
     @GetMapping("/calculate/total/price")
     public Map<String, Object> calculateTotalPrice(@RequestParam String products,
                                                    @RequestParam int quantity) {
+        log.info("计算总价");
         if (products == null || products.isEmpty() || quantity <= 0)
             return Map.of("success", false, "message", "参数无效");
         if (!isContains(products))
@@ -154,7 +159,7 @@ public class PurchaseBase {
     //带商品名的计算总价
     @GetMapping("/calculate/total/price/with/name")
     public Map<String, Object> selectProductsWithTotalPrice(@RequestParam String productsName) {
-
+        log.info("带商品名的计算总价");
         if (isNullOrEmpty(productsName))
             return Map.of("success", false, "message", "商品信息无效");
 
@@ -182,6 +187,7 @@ public class PurchaseBase {
     @DeleteMapping("/delete/single/product")
     public Map<String, Object> deleteSingleProduct(@RequestParam String productName,
                                                    @RequestParam int id) {
+        log.info("删除一个商品");
         if (isNullOrEmpty(productName))
             return Map.of("success", false, "message", "商品不能为空");
         if (!isContains(productName))
@@ -201,6 +207,7 @@ public class PurchaseBase {
                                                  @RequestParam int productsStock,
                                                  @RequestParam String productsSupplier,
                                                  @RequestParam String productsDescription) {
+        log.info("修改商品");
         if (isNullOrEmpty(productsName))
             return Map.of("success", false, "message", "商品不能为空");
         if (!isContains(productsName))
@@ -221,6 +228,7 @@ public class PurchaseBase {
     @PostMapping("/comment/insert") public Map<String,Object> commentInsert(@RequestParam String productName,
                                             @RequestParam String content,
                                             HttpServletRequest request ){
+        log.info("插入一条商品评论");
         if(isNullOrEmpty (productName)||isNullOrEmpty(content))
             return Map.of("success", false, "message", "商品名或评论内容不能为空");
         //从会话中取当前登录用户,取不到则记为匿名
@@ -314,4 +322,39 @@ public class PurchaseBase {
         return Map.of("success", true, "message", "准备发货，库存-1");
     }
 
+    //读取注册用户身份，如果是普通用户，对商品操作没有任何增删改的操作权限。商家有权限修改商品信息
+    @PutMapping("/identity/check")
+    public Map<String,Object> revokeAndGrant(HttpServletRequest request){
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("loginUser") == null)
+            return Map.of("success", false, "message", "未登录", "canModify", false);
+        Map<?, ?> loginUser = (Map<?, ?>) session.getAttribute("loginUser");
+        String username = String.valueOf(loginUser.get("username"));
+        Integer k = jdbcTemplate.queryForObject(
+                "SELECT is_ordinary_user FROM LogIn.users WHERE username = ?",
+                Integer.class, username);
+        if (k == null || k == 0)
+            return Map.of("success", false, "message", "你没有任何权限修改商品", "canModify", false);
+        return Map.of("success", true, "message", "商家身份，可修改商品", "canModify", true);
+    }
+
+    //UPDATE LogIn.users SET is_ordinary_user = 1 WHERE username='贾奕嘉'
+    @PutMapping("/identity/set")
+    public Map<String,Object> setRevokeAndGrant(Map<?,?> REVOKE_GRANT,@RequestParam String nameWill){
+        if(REVOKE_GRANT
+                .equals(Map.of("success", false, "message", "你没有任何权限修改商品", "canModify", false))){
+            return Map.of("success", false, "message", "你没有任何权限修改商品", "canModify", false);
+        }
+        //表中找不到人
+        String SET_RIGHT="UPDATE LogIn.users SET is_ordinary_user = 1 WHERE username=?";
+        String IS_CONTAINS_NAME="SELECT username FROM LogIn.users WHERE username=?";
+        if(jdbcTemplate.queryForList(IS_CONTAINS_NAME,nameWill).isEmpty())
+            return Map.of("success",false,"message","找不到此人");
+        //输入null姓名
+        if(isNullOrEmpty(nameWill)) return Map.of("success",false,"message","姓名不能为空");
+        else {
+            jdbcTemplate.update(SET_RIGHT,nameWill);
+            return Map.of("success",true,"message","修改成功!");
+        }
+    }
 }

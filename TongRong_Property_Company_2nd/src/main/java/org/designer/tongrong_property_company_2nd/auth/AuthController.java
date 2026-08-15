@@ -54,7 +54,8 @@ public class AuthController {
                                         @RequestParam String password,
                                         @RequestParam(required = false) String email,
                                         @RequestParam(required = false) String fullName,
-                                        @RequestParam(required = false) String phone) {
+                                        @RequestParam(required = false) String phone,
+                                        @RequestParam(required = false) Boolean isOrdinaryUser) {
         if (username == null || username.isBlank() || password == null || password.length() < 6)
             return Map.of("success", false, "message", "用户名不能为空，密码长度至少6位");
 
@@ -71,15 +72,17 @@ public class AuthController {
         }
 
         try {
+            int isMerchant = (isOrdinaryUser != null && isOrdinaryUser) ? 1 : 0;
             int rows = jdbcTemplate.update(
-                    "INSERT INTO LogIn.users (username, email, password_hash, salt, full_name, phone, status) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, 1)",
+                    "INSERT INTO LogIn.users (username, email, password_hash, salt, full_name, phone, status, is_ordinary_user) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, 1, ?)",
                     username,
                     (email == null || email.isBlank()) ? null : email,
                     sha256Hex(password + DEFAULT_SALT),
                     DEFAULT_SALT,
                     (fullName == null || fullName.isBlank()) ? null : fullName,
-                    (phone == null || phone.isBlank()) ? null : phone);
+                    (phone == null || phone.isBlank()) ? null : phone,
+                    isMerchant);
 
             if (rows > 0) {
                 log.info("新用户注册成功：{}", username);
@@ -98,7 +101,7 @@ public class AuthController {
                                      @RequestParam String username,
                                      @RequestParam String password) {
         List<Map<String, Object>> userList = jdbcTemplate.queryForList(
-                "SELECT id, username, password_hash, salt, full_name, status FROM LogIn.users WHERE username = ?",
+                "SELECT id, username, password_hash, salt, full_name, status, is_ordinary_user FROM LogIn.users WHERE username = ?",
                 username);
 
         if (userList.isEmpty()) {
@@ -120,10 +123,13 @@ public class AuthController {
 
         // 写入会话
         HttpSession session = request.getSession(true);
+        Object merchantFlag = user.get("is_ordinary_user");
+        boolean isOrdinaryUser = (merchantFlag != null) && ((Number) merchantFlag).intValue() == 1;
         session.setAttribute(SESSION_USER_KEY, Map.of(
                 "id", user.get("id"),
                 "username", user.get("username"),
-                "fullName", user.get("full_name")));
+                "fullName", user.get("full_name"),
+                "isOrdinaryUser", isOrdinaryUser));
 
         int userId = ((Number) user.get("id")).intValue();
         String clientIp = request.getRemoteAddr();
@@ -140,7 +146,8 @@ public class AuthController {
         log.info("用户登录成功：{}", username);
         return Map.of("success", true, "message", "登录成功",
                 "username", user.get("username"),
-                "fullName", user.get("full_name"));
+                "fullName", user.get("full_name"),
+                "isOrdinaryUser", isOrdinaryUser);
     }
 
     // 登出

@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS `users` (
     `full_name`       VARCHAR(100) DEFAULT NULL COMMENT '真实姓名',
     `phone`           VARCHAR(20)  DEFAULT NULL COMMENT '手机号码',
     `status`          TINYINT      NOT NULL DEFAULT 1 COMMENT '状态:1-正常,0-禁用',
+    `is_ordinary_user` TINYINT     NULL DEFAULT 0 COMMENT '是否商家:1-是,0-否(NULL按0处理)',
     `last_login_ip`   VARCHAR(45)  DEFAULT NULL COMMENT '最后登录IP',
     `last_login_time` DATETIME     DEFAULT NULL COMMENT '最后登录时间',
     `login_count`     INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '登录总次数',
@@ -62,3 +63,13 @@ VALUES
     ('lisi',     'lisi@example.com',     SHA2(CONCAT('123456', 'fixed_salt'), 256), 'fixed_salt', '李四',   '13800000002', 1);
 
 SELECT id, username, full_name, status FROM `users`;
+
+-- =============================================
+-- 存量数据库升级: 新增 "是否商家" 可空列
+-- 已建过表(不含该列)时手动执行以下语句:
+-- =============================================
+-- ALTER TABLE `users` ADD COLUMN `is_ordinary_user` TINYINT NULL DEFAULT 0
+--     COMMENT '是否商家:1-是,0-否(NULL按0处理)' AFTER `status`;
+UPDATE users
+set username='我是聪明人'
+where username='贾奕嘉';
