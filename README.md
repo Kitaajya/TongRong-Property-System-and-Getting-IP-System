@@ -590,7 +590,6 @@ spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 | 评论回复 |  ✅已完成 | v1.2.4 |
 | QQ邮箱昂验证码功能 | ✅ 已完成 | v1.2.4 |
 |评论回复通知 | 🚧 规划中 | v1.2.4 |
-
 | 物业管理端界面 | 🚧 规划中 | v1.2.4 |
 | 小程序/APP前端 | 🚧 规划中 | v1.2.x |
 | 高并发 | 🚧 规划中 | v3.1 |
