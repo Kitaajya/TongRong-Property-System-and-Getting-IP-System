@@ -14,6 +14,7 @@ USE `LogIn`;
 -- =============================================
 -- 表: users (用户主表)
 -- 密码存储: SHA2(CONCAT(明文密码, salt), 256) 十六进制
+-- 角色: role = user(普通用户) / merchant(商家) / manager(物管人员)
 -- =============================================
 CREATE TABLE IF NOT EXISTS `users` (
     `id`              INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '用户ID(主键)',
@@ -24,7 +25,8 @@ CREATE TABLE IF NOT EXISTS `users` (
     `full_name`       VARCHAR(100) DEFAULT NULL COMMENT '真实姓名',
     `phone`           VARCHAR(20)  DEFAULT NULL COMMENT '手机号码',
     `status`          TINYINT      NOT NULL DEFAULT 1 COMMENT '状态:1-正常,0-禁用',
-    `is_ordinary_user` TINYINT     NULL DEFAULT 0 COMMENT '是否商家:1-是,0-否(NULL按0处理)',
+    `is_ordinary_user` TINYINT     NULL DEFAULT 0 COMMENT '是否商家(兼容旧版):1-是,0-否(NULL按0处理)',
+    `role`            VARCHAR(20)  NOT NULL DEFAULT 'user' COMMENT '角色:user-普通用户,merchant-商家,manager-物管人员',
     `last_login_ip`   VARCHAR(45)  DEFAULT NULL COMMENT '最后登录IP',
     `last_login_time` DATETIME     DEFAULT NULL COMMENT '最后登录时间',
     `login_count`     INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '登录总次数',
@@ -55,18 +57,24 @@ CREATE TABLE IF NOT EXISTS `login_logs` (
 
 -- =============================================
 -- 初始测试账号 (密码均为 123456)
+-- admin = 物管人员(manager)  可查看员工/数据，无商品增删改
+-- zhangsan = 商家(merchant)  可增删改商品，看不到员工表
+-- lisi = 普通用户(user)      仅可浏览商品，无增删改、无员工表
 -- =============================================
-INSERT INTO `users` (`username`, `email`, `password_hash`, `salt`, `full_name`, `phone`, `status`)
+INSERT INTO `users` (`username`, `email`, `password_hash`, `salt`, `full_name`, `phone`, `status`, `is_ordinary_user`, `role`)
 VALUES
-    ('admin',    'admin@example.com',    SHA2(CONCAT('123456', 'fixed_salt'), 256), 'fixed_salt', '管理员', '13800000000', 1),
-    ('zhangsan', 'zhangsan@example.com', SHA2(CONCAT('123456', 'fixed_salt'), 256), 'fixed_salt', '张三',   '13800000001', 1),
-    ('lisi',     'lisi@example.com',     SHA2(CONCAT('123456', 'fixed_salt'), 256), 'fixed_salt', '李四',   '13800000002', 1);
+    ('admin',    'admin@example.com',    SHA2(CONCAT('123456', 'fixed_salt'), 256), 'fixed_salt', '管理员', '13800000000', 1, 0, 'manager'),
+    ('zhangsan', 'zhangsan@example.com', SHA2(CONCAT('123456', 'fixed_salt'), 256), 'fixed_salt', '张三',   '13800000001', 1, 1, 'merchant'),
+    ('lisi',     'lisi@example.com',     SHA2(CONCAT('123456', 'fixed_salt'), 256), 'fixed_salt', '李四',   '13800000002', 1, 0, 'user');
 
-SELECT id, username, full_name, status FROM `users`;
+SELECT id, username, full_name, status, role FROM `users`;
 
 -- =============================================
--- 存量数据库升级: 新增 "是否商家" 可空列
+-- 存量数据库升级: 新增 "是否商家" 与 "角色" 列
 -- 已建过表(不含该列)时手动执行以下语句:
 -- =============================================
 -- ALTER TABLE `users` ADD COLUMN `is_ordinary_user` TINYINT NULL DEFAULT 0
---     COMMENT '是否商家:1-是,0-否(NULL按0处理)' AFTER `status`;
+--     COMMENT '是否商家(兼容旧版):1-是,0-否(NULL按0处理)' AFTER `status`;
+-- ALTER TABLE `users` ADD COLUMN `role` VARCHAR(20) NOT NULL DEFAULT 'user'
+--     COMMENT '角色:user-普通用户,merchant-商家,manager-物管人员' AFTER `is_ordinary_user`;
+-- UPDATE `users` SET `role` = 'merchant' WHERE `is_ordinary_user` = 1 AND (`role` IS NULL OR `role` = '');

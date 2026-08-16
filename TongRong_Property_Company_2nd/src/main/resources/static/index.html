@@ -98,6 +98,13 @@
             transition: background .15s, color .15s;
         }
         .nav a:hover { background: var(--primary); color: #fff; }
+        .nav-badge {
+            display: inline-block; min-width: 18px; height: 18px; line-height: 18px;
+            margin-left: 6px; padding: 0 5px; border-radius: 9px;
+            background: #ef4444; color: #fff; font-size: 11px; font-weight: 600;
+            text-align: center; vertical-align: middle;
+        }
+        .nav-badge.zero { background: #94a3b8; }
 
         /* 右栏天气卡片 */
         .weather-card {
@@ -176,12 +183,12 @@
         .sort-btn { font-size: 13px; color: #999; cursor: pointer; margin-left: 12px; user-select: none; }
         .sort-btn.active { color: #2982FF; }
         .comment-publish { display: flex; gap: 12px; margin-bottom: 20px; }
-        .avatar {
+        .comment-wrap .avatar {
             width: 40px; height: 40px; border-radius: 50%; background: #eee;
             flex-shrink: 0; display: flex; align-items: center; justify-content: center;
             color: #fff; font-size: 18px; font-weight: 600; overflow: hidden;
         }
-        .avatar-letter { background: linear-gradient(135deg, #60a5fa, #2982FF); }
+        .comment-wrap .avatar-letter { background: linear-gradient(135deg, #60a5fa, #2982FF); }
         .input-box { flex: 1; }
         .publish-product { margin-bottom: 6px; }
         .publish-product input {
@@ -216,6 +223,21 @@
         .comment-msg { margin-top: 10px; font-size: 13px; }
         .comment-msg.error { color: var(--danger); }
         .comment-msg.ok { color: #15803d; }
+        .msg-list { margin-top: 8px; }
+        .msg-item {
+            padding: 14px 12px; border-radius: 10px; margin-bottom: 10px; cursor: pointer;
+            border: 1px solid #eef2f7; transition: background .15s;
+        }
+        .msg-item:hover { background: #f8fafc; }
+        .msg-item.unread { background: #fff7ed; border-color: #fed7aa; }
+        .msg-top { display: flex; gap: 12px; }
+        .msg-main { flex: 1; min-width: 0; }
+        .msg-product { font-size: 12px; color: #888; margin: 4px 0; }
+        .msg-dot {
+            display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+            background: #ef4444; margin-left: 6px; vertical-align: middle;
+        }
+        .comment-empty { text-align: center; padding: 40px 0; color: #999; font-size: 14px; }
         .comment-actions { display: flex; gap: 12px; align-items: center; margin-top: 2px; }
         .sub-reply-wrap { margin-top: 12px; margin-left: 52px; padding-left: 12px; border-left: 1px solid #eee; }
         .sub-reply-list { margin-top: 8px; }
@@ -321,6 +343,96 @@
             .clock-box { display: none; }
             .sub-reply-wrap { margin-left: 44px; }
         }
+
+        /* ===== 工作台统计卡片 ===== */
+        .stats {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 14px; margin-bottom: 18px;
+        }
+        .stat-card {
+            background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+            padding: 16px 18px; box-shadow: 0 1px 3px rgba(15,23,42,.08);
+            transition: transform .15s, box-shadow .15s; cursor: pointer;
+            position: relative; overflow: hidden;
+        }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(15,23,42,.12); }
+        .stat-card .num { font-size: 26px; font-weight: 700; color: var(--primary); line-height: 1.2; }
+        .stat-card .label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+        .stat-card .stat-icon {
+            position: absolute; right: 10px; top: 10px; width: 36px; height: 36px;
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            font-size: 18px; background: rgba(37,99,235,.1);
+        }
+        .stat-card.warn .num { color: #b45309; }
+        .stat-card.warn .stat-icon { background: rgba(245,158,11,.15); }
+        .stat-card.danger .num { color: #b91c1c; }
+        .stat-card.danger .stat-icon { background: rgba(220,38,38,.1); }
+        .stat-card.ok .num { color: #15803d; }
+        .stat-card.ok .stat-icon { background: rgba(22,163,74,.12); }
+
+        .welcome-banner {
+            background: linear-gradient(120deg, #1e3a8a, #2563eb);
+            color: #fff; border-radius: 14px; padding: 20px 24px; margin-bottom: 18px;
+            display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+            box-shadow: 0 6px 20px rgba(37,99,235,.25);
+        }
+        .welcome-banner h2 { color: #fff; border-left-color: #93c5fd; margin: 0 0 4px; }
+        .welcome-banner .sub { font-size: 13px; opacity: .85; }
+        .welcome-banner .welcome-btn {
+            background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.35);
+            color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 13px;
+        }
+        .welcome-banner .welcome-btn:hover { background: rgba(255,255,255,.28); }
+
+        /* ===== 角色徽标 ===== */
+        .role-badge {
+            display: inline-block; padding: 2px 10px; border-radius: 20px;
+            font-size: 12px; font-weight: 600; margin-top: 6px;
+        }
+        .role-badge.merchant { background: rgba(251,191,36,.2); color: #fcd34d; border: 1px solid rgba(251,191,36,.4); }
+        .role-badge.user { background: rgba(147,197,253,.15); color: #93c5fd; border: 1px solid rgba(147,197,253,.35); }
+        .perm-hint { font-size: 12px; color: rgba(255,255,255,.7); margin-top: 8px; }
+
+        /* ===== Toast 提示 ===== */
+        #toastBox {
+            position: fixed; top: 18px; right: 18px; z-index: 9999;
+            display: flex; flex-direction: column; gap: 8px; max-width: 320px;
+        }
+        .toast {
+            padding: 10px 16px; border-radius: 10px; font-size: 13px; color: #fff;
+            box-shadow: 0 6px 20px rgba(15,23,42,.25); animation: toastIn .25s ease;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .toast.ok { background: #15803d; }
+        .toast.err { background: #b91c1c; }
+        .toast.info { background: #1d4ed8; }
+        .toast.out { opacity: 0; transform: translateX(12px); transition: all .3s; }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(24px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* ===== 空/加载状态 ===== */
+        .state-tip { padding: 24px; text-align: center; color: var(--muted); font-size: 14px; }
+        .state-tip.error { color: var(--danger); }
+
+        /* ===== 内联 loading 按钮 ===== */
+        button[disabled] { opacity: .6; cursor: not-allowed; }
+
+        /* ===== 评论区筛选条 ===== */
+        .comment-filter { display: flex; align-items: center; gap: 8px; }
+        .comment-filter input {
+            width: 160px; padding: 5px 10px; font-size: 13px; margin: 0;
+            border: 1px solid #eee; border-radius: 4px; outline: none;
+        }
+        .comment-filter input:focus { border-color: #2982FF; }
+
+        /* ===== 工具行 ===== */
+        .toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+        .toolbar input { width: 180px; }
+
+        /* 大屏下内容右栏加一点留白 */
+        @media (min-width: 1400px) { .content { padding: 22px 34px; } }
     </style>
 </head>
 <body>
@@ -354,7 +466,7 @@
                 <button id="registerBtn" class="hidden" onclick="doRegister()">注 册</button>
             </p>
             <div id="authMsg" class="result"></div>
-            <p style="text-align:center; color:#888">测试账号：admin / zhangsan / lisi，密码均为 123456</p>
+            <p style="text-align:center; color:#888; line-height:1.7">测试账号（密码均为 123456）：<br>admin(物管) / zhangsan(商家) / lisi(普通用户)</p>
         </div>
     </div>
 </section>
@@ -367,11 +479,15 @@
                 <svg viewBox="0 0 24 24" fill="#fff"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
             </div>
             <div class="user-name" id="userInfo"></div>
+            <div id="roleBadge"></div>
+            <div class="perm-hint" id="permHint"></div>
             <button id="logoutBtn" class="hidden" onclick="logout()">退出登录</button>
         </div>
-        <div>
+        <div id="group-func">
             <h3 class="menu-title">功能菜单</h3>
             <nav class="nav">
+                <a href="#" data-nav="home" onclick="return loadDashboard()">工作台</a>
+                <a href="#" data-nav="messages" onclick="return loadMessages()">我的消息<span class="nav-badge" id="msgBadge" style="display:none"></span></a>
                 <a href="#" data-nav="all" onclick="return loadAll()">全部商品</a>
                 <a href="#" data-nav="single" onclick="return querySingle()">查询商品</a>
                 <a href="#" data-nav="fuzzy" onclick="return fuzzySearch()">模糊搜索</a>
@@ -386,7 +502,7 @@
                 <a href="#" data-nav="pending" onclick="return loadPending()">商品审批</a>
             </nav>
         </div>
-        <div>
+        <div id="group-worker">
             <h3 class="menu-title">员工管理</h3>
             <nav class="nav">
                 <a href="#" data-nav="workers" onclick="return loadWorkers()">员工列表</a>
@@ -395,7 +511,7 @@
                 <a href="#" data-nav="fireWorker" onclick="return fireWorker()">辞退员工</a>
             </nav>
         </div>
-        <div>
+        <div id="group-db">
             <h3 class="menu-title">数据库浏览</h3>
             <nav class="nav">
                 <a href="#" data-nav="tables" onclick="return loadTables()">查看数据表</a>
@@ -405,7 +521,7 @@
                 <a href="#" data-nav="dbWrite" onclick="return writeToFile()">导出到文件</a>
             </nav>
         </div>
-        <div>
+        <div id="group-auth">
             <h3 class="menu-title">权限与认证</h3>
             <nav class="nav">
                 <a href="#" data-nav="cert" onclick="return checkIdentity()">实名认证</a>
@@ -433,6 +549,42 @@
         </div>
         <div class="sections">
 
+    <!-- 工作台 -->
+    <section id="sec-home">
+        <div class="welcome-banner">
+            <div>
+                <h2 id="welcomeTitle">工作台</h2>
+                <div class="sub" id="welcomeSub">数据总览与快捷入口</div>
+            </div>
+            <button class="welcome-btn" onclick="loadDashboard()">刷新数据</button>
+        </div>
+        <div class="stats" id="statGrid">
+            <div class="stat-card" data-target="sec-all"><div class="stat-icon">📦</div><div class="num">-</div><div class="label">商品总数</div></div>
+            <div class="stat-card warn" data-target="sec-warning"><div class="stat-icon">⚠️</div><div class="num">-</div><div class="label">库存预警</div></div>
+            <div class="stat-card danger" data-target="sec-pending" data-role="merchant"><div class="stat-icon">📝</div><div class="num">-</div><div class="label">待审批</div></div>
+            <div class="stat-card ok" data-target="sec-comments"><div class="stat-icon">💬</div><div class="num">-</div><div class="label">评论总数</div></div>
+            <div class="stat-card" data-target="sec-workers" data-role="manager"><div class="stat-icon">👥</div><div class="num">-</div><div class="label">员工总数</div></div>
+        </div>
+        <div id="homeResult" class="result"></div>
+    </section>
+
+    <!-- 我的消息（收到的评论回复通知） -->
+    <section id="sec-messages">
+        <h2>我的消息</h2>
+        <div class="section-actions">
+            <button class="ghost" onclick="loadMessages()">刷新消息</button>
+            <button class="ghost" onclick="markAllRead()">全部标记已读</button>
+        </div>
+        <div class="comment-wrap">
+            <div class="comment-head">
+                <div class="total">收到评论回复(<span id="msgTotal">0</span>)</div>
+            </div>
+            <div id="msgList" class="msg-list">
+                <div class="comment-empty">暂无消息</div>
+            </div>
+        </div>
+    </section>
+
     <!-- 浏览全部商品（默认折叠） -->
     <section id="sec-all">
         <h2>全部商品</h2>
@@ -440,17 +592,19 @@
                 <button class="ghost" onclick="loadAll()">刷新商品列表</button>
                 <button class="ghost" id="allToggle" onclick="toggleAllProducts()">展开商品 ▸</button>
             </div>
-        </div>
         <div id="allTable" class="collapsible collapsed"></div>
     </section>
 
     <!-- 所有评论（百度风格） -->
-    <section>
+    <section id="sec-comments">
         <h2>所有评论</h2>
         <div class="comment-wrap">
             <div class="comment-head">
                 <div class="total">全部评论(<span id="commentTotal">0</span>)</div>
                 <div class="sort-box">
+                    <span class="comment-filter">
+                        <input id="commentFilter" placeholder="按商品名筛选" onkeydown="if(event.key==='Enter')loadComments()">
+                    </span>
                     <span class="sort-btn active" data-type="old" onclick="setCommentSort(this)">最早</span>
                     <span class="sort-btn" data-type="new" onclick="setCommentSort(this)">最新</span>
                 </div>
@@ -518,7 +672,7 @@
             <input id="pStock" type="number" value="1" placeholder="库存">
             <input id="pSupplier" placeholder="供应商">
             <input id="pDesc" placeholder="描述">
-            <button onclick="addProduct()">添加</button>
+            <button id="addBtn" onclick="addProduct()">添加</button>
         </div>
         <div id="addResult" class="result"></div>
     </section>
@@ -534,7 +688,7 @@
             <input id="mSupplier" placeholder="供应商">
             <input id="mDesc" placeholder="描述">
             <input id="mQuantity" type="number" value="2" min="1" placeholder="数量">
-            <button onclick="addMoreProduct()">批量添加</button>
+            <button id="moreAddBtn" onclick="addMoreProduct()">批量添加</button>
         </div>
         <div id="moreResult" class="result"></div>
     </section>
@@ -550,8 +704,8 @@
             <input id="eStock" type="number" placeholder="库存">
             <input id="eSupplier" placeholder="供应商">
             <input id="eDesc" placeholder="描述">
-            <button onclick="editProduct()">修改</button>
-            <button class="danger" onclick="deleteProduct()">删除</button>
+            <button id="editBtn" onclick="editProduct()">修改</button>
+            <button id="delBtn" class="danger" onclick="deleteProduct()">删除</button>
         </div>
         <div id="editResult" class="result"></div>
     </section>
@@ -567,8 +721,11 @@
     <!-- 库存预警 -->
     <section id="sec-warning">
         <h2>库存预警</h2>
-        <p class="section-tip">自动列出库存低于预警阈值（12）的商品</p>
-        <button class="ghost" onclick="loadStockWarning()">刷新预警列表</button>
+        <p class="section-tip">自动列出库存低于预警阈值的商品</p>
+        <div class="toolbar">
+            <input id="warningThreshold" type="number" value="12" min="1" placeholder="预警阈值">
+            <button class="ghost" onclick="loadStockWarning()">刷新预警列表</button>
+        </div>
         <div id="warningResult" class="result"></div>
         <div id="warningTable"></div>
     </section>
@@ -578,7 +735,7 @@
         <h2>商品发货</h2>
         <p class="section-tip">发货后该商品库存 -1，库存低于阈值（12）将无法发货</p>
         <input id="sendName" placeholder="商品名称">
-        <button onclick="sendProduct()">发货（库存-1）</button>
+        <button id="sendBtn" onclick="sendProduct()">发货（库存-1）</button>
         <div id="sendResult" class="result"></div>
     </section>
 
@@ -606,7 +763,7 @@
             <input id="wDepartment" placeholder="部门">
             <input id="wGender" placeholder="性别">
             <input id="wWork" placeholder="职务">
-            <button onclick="addWorker()">添加员工</button>
+            <button id="addWorkerBtn" onclick="addWorker()">添加员工</button>
         </div>
         <div id="addWorkerResult" class="result"></div>
     </section>
@@ -620,7 +777,7 @@
             <input id="ewDepartment" placeholder="部门">
             <input id="ewGender" placeholder="性别">
             <input id="ewWork" placeholder="职务">
-            <button onclick="editWorker()">修改员工</button>
+            <button id="editWorkerBtn" onclick="editWorker()">修改员工</button>
         </div>
         <div id="editWorkerResult" class="result"></div>
     </section>
@@ -629,7 +786,7 @@
     <section id="sec-fireWorker">
         <h2>辞退员工</h2>
         <input id="fwId" placeholder="员工ID">
-        <button class="danger" onclick="fireWorker()">辞退员工</button>
+        <button id="fireWorkerBtn" class="danger" onclick="fireWorker()">辞退员工</button>
         <div id="fireWorkerResult" class="result"></div>
     </section>
 
@@ -691,7 +848,7 @@
     <!-- 身份检查 -->
     <section id="sec-identityCheck">
         <h2>身份检查</h2>
-        <p class="section-tip">判断当前登录用户是否为商家，商家才拥有商品增删改权限</p>
+        <p class="section-tip">查看当前登录用户角色权限：商家可增删改商品；物管可查看员工模块；普通用户仅可浏览</p>
         <button class="ghost" onclick="checkIdentityPermission()">检查当前用户身份</button>
         <div id="identityCheckResult" class="result"></div>
     </section>
@@ -699,7 +856,7 @@
     <!-- 设置商家权限 -->
     <section id="sec-identitySet">
         <h2>设置商家权限</h2>
-        <p class="section-tip">将指定用户名设置为商家（is_ordinary_user = 1）</p>
+        <p class="section-tip">仅物管人员可用：将指定用户名升级为商家（获得商品增删改权限）</p>
         <input id="setMerchantName" placeholder="要授予商家权限的用户名">
         <button onclick="setMerchantPermission()">设置商家权限</button>
         <div id="identitySetResult" class="result"></div>
@@ -728,6 +885,40 @@
         el.className = 'result' + (isError ? ' error' : '');
     }
 
+    // 全局 Toast 提示
+    function toast(text, type) {
+        let box = document.getElementById('toastBox');
+        if (!box) {
+            box = document.createElement('div');
+            box.id = 'toastBox';
+            document.body.appendChild(box);
+        }
+        const el = document.createElement('div');
+        el.className = 'toast ' + (type || 'info');
+        el.textContent = text;
+        box.appendChild(el);
+        setTimeout(() => {
+            el.classList.add('out');
+            setTimeout(() => el.remove(), 350);
+        }, 2600);
+    }
+
+    // 按钮忙碌状态：fn 执行期间禁用按钮并显示 busyText
+    function withBusy(btnId, busyText, fn) {
+        const el = document.getElementById(btnId);
+        const oldText = el ? el.textContent : '';
+        const oldDisabled = el ? el.disabled : false;
+        if (el) { el.disabled = true; if (busyText) el.textContent = busyText; }
+        return Promise.resolve().then(fn).finally(() => {
+            if (el) { el.disabled = oldDisabled; if (busyText) el.textContent = oldText; }
+        });
+    }
+
+    // 空状态 / 错误状态容器
+    function stateTip(text, isError) {
+        return '<div class="state-tip' + (isError ? ' error' : '') + '">' + escapeHtml(text) + '</div>';
+    }
+
     function switchTab(tab) {
         currentTab = tab;
         document.getElementById('loginTitle').textContent = tab === 'login' ? '用户登录' : '用户注册';
@@ -741,27 +932,166 @@
     }
 
     function showLogin() {
+        window.__loggedIn = false;
+        currentRole = 'user';
         document.getElementById('loginSection').classList.remove('hidden');
         document.getElementById('mainContent').classList.add('hidden');
         document.getElementById('logoutBtn').classList.add('hidden');
         document.getElementById('userInfo').textContent = '';
         document.getElementById('authMsg').textContent = '';
+        const badge = document.getElementById('roleBadge');
+        const hint = document.getElementById('permHint');
+        if (badge) badge.innerHTML = '';
+        if (hint) hint.textContent = '';
     }
 
     function showMain(user) {
+        window.__loggedIn = true;
         document.getElementById('loginSection').classList.add('hidden');
         document.getElementById('mainContent').classList.remove('hidden');
         document.getElementById('logoutBtn').classList.remove('hidden');
         const fullName = (user && user.fullName) ? user.fullName + '（' + user.username + '）' : (user ? user.username : '');
         document.getElementById('userInfo').textContent = '当前用户：' + fullName;
+        currentRole = (user && user.role) || (user && user.isOrdinaryUser ? 'merchant' : 'user');
+        const badge = document.getElementById('roleBadge');
+        const hint = document.getElementById('permHint');
+        if (badge) badge.innerHTML = roleBadgeHtml(currentRole);
+        if (hint) hint.textContent = roleHintText(currentRole);
+        applyRoleViews();
         const av = document.getElementById('publishAvatar');
         if (av && user && user.username) av.textContent = String(user.username)[0];
         loadWeather();
         startClock();
         loadComments();
+        loadDashboard();
         if (!window.__commentsTimer) {
             window.__commentsTimer = setInterval(loadComments, 30000);
         }
+        if (!window.__msgTimer) {
+            window.__msgTimer = setInterval(refreshMessageUnread, 30000);
+        }
+        refreshMessageUnread();
+    }
+
+    // 当前登录用户角色: user(普通) / merchant(商家) / manager(物管)
+    let currentRole = 'user';
+
+    function roleBadgeHtml(role) {
+        if (role === 'merchant') return '<span class="role-badge merchant">商家账号 · 可修改商品</span>';
+        if (role === 'manager')
+            return '<span class="role-badge merchant" style="background:rgba(34,197,94,.16);color:#86efac;border-color:rgba(34,197,94,.4)">物管人员 · 可管理员工</span>';
+        return '<span class="role-badge user">普通账号</span>';
+    }
+
+    function roleHintText(role) {
+        if (role === 'merchant') return '已授予商品增删改权限';
+        if (role === 'manager') return '可管理员工与数据，无商品修改权限';
+        return '仅可浏览商品，无修改权限';
+    }
+
+    // 按角色显隐菜单与模块：
+    // 商家(merchant)：可见商品增删改/发货/审批，无员工模块
+    // 物管(manager)：可见员工/数据库模块，无商品增删改
+    // 普通用户(user)：仅浏览商品，无增删改、无员工模块
+    function applyRoleViews() {
+        const isMerchant = currentRole === 'merchant';
+        const isManager = currentRole === 'manager';
+        ['add', 'addMore', 'edit', 'send', 'pending'].forEach(key => {
+            document.querySelectorAll('.nav a[data-nav="' + key + '"]').forEach(a => a.style.display = isMerchant ? '' : 'none');
+            const sec = document.getElementById('sec-' + key);
+            if (sec) sec.style.display = isMerchant ? '' : 'none';
+        });
+        ['workers', 'addWorker', 'editWorker', 'fireWorker', 'tables', 'loginTable', 'exceptionTable', 'dbSelect', 'dbWrite', 'identitySet'].forEach(key => {
+            document.querySelectorAll('.nav a[data-nav="' + key + '"]').forEach(a => a.style.display = isManager ? '' : 'none');
+            const sec = document.getElementById('sec-' + key);
+            if (sec) sec.style.display = isManager ? '' : 'none';
+        });
+        const gw = document.getElementById('group-worker');
+        const gd = document.getElementById('group-db');
+        if (gw) gw.style.display = isManager ? '' : 'none';
+        if (gd) gd.style.display = isManager ? '' : 'none';
+    }
+
+    // 工作台：统计数据 + 快捷入口
+    async function loadDashboard() {
+        markActive('home');
+        document.querySelectorAll('.stat-card').forEach(c => {
+            const needRole = c.dataset.role;
+            if (needRole && needRole !== currentRole) { c.style.display = 'none'; return; }
+            c.style.display = '';
+            const target = c.dataset.target;
+            c.onclick = () => {
+                const el = document.getElementById(target);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            };
+        });
+        const setNum = (i, v) => {
+            const c = document.querySelectorAll('.stat-card')[i];
+            if (c) c.querySelector('.num').textContent = v;
+        };
+        try {
+            const [products, warnings, pending, comments, workers] = await Promise.all([
+                fetchJson('/api/purchase/travel').catch(() => null),
+                fetchJson('/api/purchase/stock/warning').catch(() => null),
+                fetchJson('/api/purchase/pending').catch(() => null),
+                fetchJson('/api/purchase/comment/list').catch(() => null),
+                fetchJson('/api/select').catch(() => null)
+            ]);
+            setNum(0, products ? products.length : '0');
+            setNum(1, warnings ? warnings.length : '0');
+            setNum(2, pending ? pending.length : '0');
+            setNum(3, comments ? comments.length : '0');
+            setNum(4, workers ? workers.length : '0');
+            const h = new Date().getHours();
+            const greet = h < 6 ? '夜深了' : h < 12 ? '上午好' : h < 14 ? '中午好' : h < 18 ? '下午好' : '晚上好';
+            const title = document.getElementById('welcomeTitle');
+            const sub = document.getElementById('welcomeSub');
+            if (title) title.textContent = greet + '，欢迎使用通融物业管理';
+            if (sub) sub.textContent = new Date().toLocaleDateString('zh-CN',
+                { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }) + ' · 数据总览';
+            show('homeResult', '数据已更新于 ' + new Date().toLocaleTimeString('zh-CN'));
+        } catch (e) {
+            show('homeResult', '统计数据加载失败: ' + e.message, true);
+        }
+        return false;
+    }
+
+    // 导航滚动监听（滚动时自动高亮当前区域）
+    function initScrollSpy() {
+        const links = Array.from(document.querySelectorAll('.nav a'));
+        const sections = links
+            .map(a => document.getElementById('sec-' + a.dataset.nav))
+            .filter(Boolean);
+        if (!('IntersectionObserver' in window)) return;
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(en => {
+                if (!en.isIntersecting) return;
+                const key = en.target.id.replace('sec-', '');
+                links.forEach(a => a.classList.toggle('active', a.dataset.nav === key));
+            });
+        }, { rootMargin: '-20% 0px -70% 0px' });
+        sections.forEach(s => observer.observe(s));
+    }
+
+    // 为带查询按钮的输入框绑定回车触发
+    function bindEnter() {
+        const map = [
+            ['singleName', () => querySingle()],
+            ['fuzzyName', () => fuzzySearch()],
+            ['singlePriceName', () => querySinglePrice()],
+            ['morePriceNames', () => queryMorePrices()],
+            ['totalNames', () => calcTotal()],
+            ['stockName', () => checkStock()],
+            ['sendName', () => sendProduct()],
+            ['certName', () => checkIdentity()],
+            ['certNumber', () => checkIdentity()],
+            ['tableName', () => selectDatabaseName()],
+            ['warningThreshold', () => loadStockWarning()]
+        ];
+        map.forEach(([id, fn]) => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') fn(); });
+        });
     }
 
     // 加载后端天气(结构化JSON + 网络天气图片)
@@ -830,19 +1160,21 @@
         const username = document.getElementById('loginUsername').value.trim();
         const password = document.getElementById('loginPassword').value;
         if (!username || !password) return show('authMsg', '请输入用户名和密码', true);
-        try {
-            const data = await fetchJson('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({ username, password }).toString()
-            });
-            if (data.success) {
-                show('authMsg', '登录成功，正在进入系统...');
-                showMain(data);
-            } else {
-                show('authMsg', data.message || '登录失败', true);
-            }
-        } catch (e) { show('authMsg', '登录失败: ' + e.message, true); }
+        await withBusy('loginBtn', '登录中...', async () => {
+            try {
+                const data = await fetchJson('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ username, password }).toString()
+                });
+                if (data.success) {
+                    show('authMsg', '登录成功，正在进入系统...');
+                    showMain(data);
+                } else {
+                    show('authMsg', data.message || '登录失败', true);
+                }
+            } catch (e) { show('authMsg', '登录失败: ' + e.message, true); }
+        });
     }
 
     async function doRegister() {
@@ -931,11 +1263,12 @@
     }
 
     // 库存状态徽标
-    function stockBadge(stock) {
+    function stockBadge(stock, threshold) {
         const s = Number(stock);
+        const t = Number(threshold) || 12;
         if (isNaN(s)) return '';
-        if (s < 12) return '<span class="badge badge-danger">库存预警 ' + s + '</span>';
-        if (s < 20) return '<span class="badge badge-warn">库存偏低 ' + s + '</span>';
+        if (s < t) return '<span class="badge badge-danger">库存预警 ' + s + '</span>';
+        if (s < t + 8) return '<span class="badge badge-warn">库存偏低 ' + s + '</span>';
         return '<span class="badge badge-ok">库存充足</span>';
     }
 
@@ -948,17 +1281,17 @@
         if (btn) btn.textContent = '收起商品 ▾';
         try {
             const list = await fetchJson('/api/purchase/travel');
-            if (!list.length) { box.innerHTML = '<p>暂无商品</p>'; return false; }
+            if (!list.length) { box.innerHTML = stateTip('暂无商品'); return false; }
             const keys = Object.keys(list[0]);
             const hasStock = keys.includes('stock');
             box.innerHTML =
-                '<table><thead><tr>' + keys.map(k => '<th>' + k + '</th>').join('') + (hasStock ? '<th>状态</th>' : '') + '</tr></thead><tbody>' +
+                '<table><thead><tr>' + keys.map(k => '<th>' + escapeHtml(k) + '</th>').join('') + (hasStock ? '<th>状态</th>' : '') + '</tr></thead><tbody>' +
                 list.map(row =>
-                    '<tr>' + keys.map(k => '<td>' + (row[k] ?? '') + '</td>').join('') +
+                    '<tr>' + keys.map(k => '<td>' + escapeHtml(row[k]) + '</td>').join('') +
                     (hasStock ? '<td>' + stockBadge(row.stock) + '</td>' : '') + '</tr>'
                 ).join('') + '</tbody></table>';
             return false;
-        } catch (e) { show('allTable', '加载失败: ' + e.message, true); return false; }
+        } catch (e) { box.innerHTML = stateTip('加载失败: ' + e.message, true); return false; }
     }
 
     // 折叠/展开全部商品区域
@@ -1035,19 +1368,22 @@
         };
         if (!p.productsName || !p.productsCategory || !p.productsSupplier || !p.productsDescription)
             return show('addResult', '请填写名称/分类/供应商/描述', true);
-        try {
-            const data = await fetchJson('/api/purchase/add/single/product', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams(p).toString()
-            });
-            show('addResult', JSON.stringify(data, null, 2));
-            loadAll();
-        } catch (e) { show('addResult', '添加失败: ' + e.message, true); }
+        await withBusy('addBtn', '添加中...', async () => {
+            try {
+                const data = await fetchJson('/api/purchase/add/single/product', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams(p).toString()
+                });
+                show('addResult', JSON.stringify(data, null, 2));
+                if (data.success) { toast('商品已添加', 'ok'); loadAll(); }
+            } catch (e) { show('addResult', '添加失败: ' + e.message, true); }
+        });
     }
 
     // 5.5 模糊搜索
     async function fuzzySearch() {
+        markActive('fuzzy');
         const keyword = document.getElementById('fuzzyName').value.trim();
         if (!keyword) return show('fuzzyResult', '请输入关键字', true);
         try {
@@ -1072,15 +1408,17 @@
         };
         if (!p.productsName || !p.productsCategory || !p.productsSupplier || !p.productsDescription || !p.quantity || p.quantity < 1)
             return show('moreResult', '请填写名称/分类/供应商/描述，且数量≥1', true);
-        try {
-            const data = await fetchJson('/api/purchase/add/more/product', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams(p).toString()
-            });
-            show('moreResult', JSON.stringify(data, null, 2), !data.success);
-            loadAll();
-        } catch (e) { show('moreResult', '批量添加失败: ' + e.message, true); }
+        await withBusy('moreAddBtn', '批量添加中...', async () => {
+            try {
+                const data = await fetchJson('/api/purchase/add/more/product', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams(p).toString()
+                });
+                show('moreResult', JSON.stringify(data, null, 2), !data.success);
+                if (data.success) { toast('批量添加成功', 'ok'); loadAll(); }
+            } catch (e) { show('moreResult', '批量添加失败: ' + e.message, true); }
+        });
         return false;
     }
 
@@ -1098,11 +1436,13 @@
         };
         if (!p.id || !p.productsName || !p.productsCategory || !p.productsSupplier || !p.productsDescription)
             return show('editResult', '请填写ID/名称/分类/供应商/描述', true);
-        try {
-            const data = await fetchJson('/api/purchase/edit/single/product?' + new URLSearchParams(p).toString(), { method: 'PUT' });
-            show('editResult', JSON.stringify(data, null, 2), !data.success);
-            loadAll();
-        } catch (e) { show('editResult', '修改失败: ' + e.message, true); }
+        await withBusy('editBtn', '修改中...', async () => {
+            try {
+                const data = await fetchJson('/api/purchase/edit/single/product?' + new URLSearchParams(p).toString(), { method: 'PUT' });
+                show('editResult', JSON.stringify(data, null, 2), !data.success);
+                if (data.success) { toast('商品已更新', 'ok'); loadAll(); }
+            } catch (e) { show('editResult', '修改失败: ' + e.message, true); }
+        });
         return false;
     }
 
@@ -1112,11 +1452,13 @@
         const name = document.getElementById('eName').value.trim();
         if (!id || !name) return show('editResult', '请填写商品ID和名称', true);
         if (!confirm('确定删除商品「' + name + '」(ID=' + id + ') 吗？')) return;
-        try {
-            const data = await fetchJson('/api/purchase/delete/single/product?' + new URLSearchParams({ id, productName: name }).toString(), { method: 'DELETE' });
-            show('editResult', JSON.stringify(data, null, 2), !data.success);
-            loadAll();
-        } catch (e) { show('editResult', '删除失败: ' + e.message, true); }
+        await withBusy('delBtn', '删除中...', async () => {
+            try {
+                const data = await fetchJson('/api/purchase/delete/single/product?' + new URLSearchParams({ id, productName: name }).toString(), { method: 'DELETE' });
+                show('editResult', JSON.stringify(data, null, 2), !data.success);
+                if (data.success) { toast('商品已删除', 'ok'); loadAll(); }
+            } catch (e) { show('editResult', '删除失败: ' + e.message, true); }
+        });
     }
 
     // 5.9 库存检查
@@ -1134,16 +1476,20 @@
     // 5.10 库存预警列表
     async function loadStockWarning() {
         markActive('warning');
+        const tInput = document.getElementById('warningThreshold');
+        const threshold = tInput ? tInput.value : 12;
         try {
-            const list = await fetchJson('/api/purchase/stock/warning');
+            const list = await fetchJson('/api/purchase/stock/warning?threshold=' + encodeURIComponent(threshold));
             const box = document.getElementById('warningTable');
-            if (!list.length) { box.innerHTML = '<p>库存充足，暂无预警商品</p>'; return; }
-            const keys = ['id', 'name', 'category', 'supplier', 'stock'];
+            const warn = document.getElementById('warningResult');
+            if (warn) warn.textContent = '';
+            if (!list.length) { box.innerHTML = stateTip('库存充足，暂无低于 ' + threshold + ' 的预警商品'); return false; }
+            const keys = ['id', 'name', 'category', 'supplier', 'stock', 'update_time'];
             box.innerHTML =
-                '<table><thead><tr>' + keys.map(k => '<th>' + k + '</th>').join('') + '<th>状态</th></tr></thead><tbody>' +
+                '<table><thead><tr>' + keys.map(k => '<th>' + escapeHtml(k) + '</th>').join('') + '<th>状态</th></tr></thead><tbody>' +
                 list.map(row =>
-                    '<tr>' + keys.map(k => '<td>' + (row[k] ?? '') + '</td>').join('') +
-                    '<td>' + stockBadge(row.stock) + '</td></tr>'
+                    '<tr>' + keys.map(k => '<td>' + escapeHtml(row[k]) + '</td>').join('') +
+                    '<td>' + stockBadge(row.stock, threshold) + '</td></tr>'
                 ).join('') + '</tbody></table>';
         } catch (e) { show('warningTable', '加载预警列表失败: ' + e.message, true); }
         return false;
@@ -1155,13 +1501,14 @@
         const name = document.getElementById('sendName').value.trim();
         if (!name) return show('sendResult', '请输入商品名', true);
         if (!confirm('确认对商品「' + name + '」发货，库存将 -1 吗？')) return false;
-        try {
-            const data = await fetchJson('/api/purchase/send/single/product?' +
-                new URLSearchParams({ productName: name }).toString(), { method: 'PUT' });
-            show('sendResult', data.message || JSON.stringify(data, null, 2), !data.success);
-            loadAll();
-            loadStockWarning();
-        } catch (e) { show('sendResult', '发货失败: ' + e.message, true); }
+        await withBusy('sendBtn', '发货中...', async () => {
+            try {
+                const data = await fetchJson('/api/purchase/send/single/product?' +
+                    new URLSearchParams({ productName: name }).toString(), { method: 'PUT' });
+                show('sendResult', data.message || JSON.stringify(data, null, 2), !data.success);
+                if (data.success) { toast('已发货，库存-1', 'ok'); loadAll(); loadStockWarning(); }
+            } catch (e) { show('sendResult', '发货失败: ' + e.message, true); }
+        });
         return false;
     }
 
@@ -1174,9 +1521,9 @@
             if (!list.length) { box.innerHTML = '<p>暂无待审核商品</p>'; return; }
             const keys = ['id', 'name', 'price', 'stock', 'supplier', 'category'];
             box.innerHTML =
-                '<table><thead><tr>' + keys.map(k => '<th>' + k + '</th>').join('') + '<th>操作</th></tr></thead><tbody>' +
+                '<table><thead><tr>' + keys.map(k => '<th>' + escapeHtml(k) + '</th>').join('') + '<th>操作</th></tr></thead><tbody>' +
                 list.map(row =>
-                    '<tr>' + keys.map(k => '<td>' + (row[k] ?? '') + '</td>').join('') +
+                    '<tr>' + keys.map(k => '<td>' + escapeHtml(row[k]) + '</td>').join('') +
                     '<td><button onclick="approve(' + row.id + ', \'已通过\')">通过</button> ' +
                     '<button onclick="approve(' + row.id + ', \'已驳回\')">驳回</button></td></tr>'
                 ).join('') + '</tbody></table>';
@@ -1188,7 +1535,7 @@
         try {
             const data = await fetchJson('/api/purchase/review?' + new URLSearchParams({ id, status }).toString(), { method: 'PUT' });
             show('approvalResult', JSON.stringify(data, null, 2), !data.success);
-            loadPending();
+            if (data.success) { toast('审批完成：' + status, 'ok'); loadPending(); }
         } catch (e) { show('approvalResult', '审批失败: ' + e.message, true); }
     }
 
@@ -1251,8 +1598,6 @@
     // 渲染评论列表：主评论 + 楼中楼嵌套，回复默认折叠
     function renderComments(list) {
         const box = document.getElementById('commentList');
-        const totalEl = document.getElementById('commentTotal');
-        if (totalEl) totalEl.textContent = list.length;
         if (!list.length) { box.innerHTML = '<div class="empty-tip">暂无评论，快来抢占首评</div>'; return; }
 
         const parsed = list.map(parseComment);
@@ -1361,30 +1706,116 @@
         const content = document.getElementById('commentContent').value.trim();
         if (!productName || !content)
             return flashCommentMsg('请输入商品名和评论内容', true);
-        try {
-            const data = await fetchJson('/api/purchase/comment/insert', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({ productName, content }).toString()
-            });
-            if (data.success) {
-                flashCommentMsg(data.message || '评论插入成功', false);
-                document.getElementById('commentContent').value = '';
-                document.getElementById('commentProductName').value = '';
-                updatePublishBtn();
-                loadComments();
-            } else {
-                flashCommentMsg(data.message || '评论插入失败', true);
-            }
-        } catch (e) { flashCommentMsg('评论失败: ' + e.message, true); }
+        await withBusy('publishBtn', '发布中...', async () => {
+            try {
+                const data = await fetchJson('/api/purchase/comment/insert', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ productName, content }).toString()
+                });
+                if (data.success) {
+                    flashCommentMsg(data.message || '评论插入成功', false);
+                    document.getElementById('commentContent').value = '';
+                    document.getElementById('commentProductName').value = '';
+                    updatePublishBtn();
+                    loadComments();
+                } else {
+                    flashCommentMsg(data.message || '评论插入失败', true);
+                }
+            } catch (e) { flashCommentMsg('评论失败: ' + e.message, true); }
+        });
     }
 
-    // 7. 加载评论列表(始终显示全部评论,不做商品名过滤)
+    // 7. 加载评论列表(可按商品名筛选)
     async function loadComments() {
+        const filter = document.getElementById('commentFilter');
+        const fv = filter ? filter.value.trim() : '';
         try {
-            const list = await fetchJson('/api/purchase/comment/list');
+            const url = '/api/purchase/comment/list' + (fv ? '?productName=' + encodeURIComponent(fv) : '');
+            const list = await fetchJson(url);
+            const totalEl = document.getElementById('commentTotal');
+            if (totalEl) totalEl.textContent = (fv ? '「' + fv + '」' : '全部') + '评论(' + list.length + ')';
             renderComments(list);
         } catch (e) { show('commentList', '加载评论失败: ' + e.message, true); }
+    }
+
+    // 我的消息：加载收到的评论回复列表
+    async function loadMessages() {
+        markActive('messages');
+        const listEl = document.getElementById('msgList');
+        if (!listEl) return false;
+        try {
+            const list = await fetchJson('/api/purchase/message/list');
+            renderMessages(list);
+            refreshMessageUnread();
+        } catch (e) {
+            listEl.innerHTML = '<div class="comment-empty">加载消息失败: ' + escapeHtml(e.message) + '</div>';
+        }
+        return false;
+    }
+
+    function renderMessages(list) {
+        const listEl = document.getElementById('msgList');
+        const totalEl = document.getElementById('msgTotal');
+        if (totalEl) totalEl.textContent = list.length;
+        if (!list.length) { listEl.innerHTML = '<div class="comment-empty">暂无消息</div>'; return; }
+        listEl.innerHTML = list.map(m => {
+            const unread = Number(m.is_read) === 0;
+            return '<div class="msg-item' + (unread ? ' unread' : '') + '" onclick="markMessageRead(' + m.id + ', this)">' +
+                '<div class="msg-top">' +
+                    letterAvatar(m.sender) +
+                    '<div class="msg-main">' +
+                        '<div class="user-info"><strong>' + escapeHtml(m.sender) + '</strong> 回复了你' +
+                            (unread ? '<span class="msg-dot"></span>' : '') +
+                            '<span class="time">' + escapeHtml(m.create_time) + '</span></div>' +
+                        '<div class="msg-product">商品「' + escapeHtml(m.product_name) + '」</div>' +
+                        '<div class="comment-text">' + escapeHtml(m.content) + '</div>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+    }
+
+    // 标记单条消息已读（点击消息时调用）
+    async function markMessageRead(id, el) {
+        if (!id) return;
+        try {
+            await fetchJson('/api/purchase/message/read?id=' + encodeURIComponent(id), { method: 'PUT' });
+            if (el && el.classList.contains('unread')) {
+                el.classList.remove('unread');
+                const dot = el.querySelector('.msg-dot');
+                if (dot) dot.remove();
+            }
+            refreshMessageUnread();
+        } catch (e) { /* 静默失败，不影响浏览 */ }
+    }
+
+    // 全部标记已读
+    async function markAllRead() {
+        try {
+            const data = await fetchJson('/api/purchase/message/read', { method: 'PUT' });
+            document.querySelectorAll('#msgList .msg-item.unread').forEach(el => {
+                el.classList.remove('unread');
+                const dot = el.querySelector('.msg-dot');
+                if (dot) dot.remove();
+            });
+            refreshMessageUnread();
+            toast(data.message || '已全部标记为已读', 'ok');
+        } catch (e) { toast('操作失败: ' + e.message, 'error'); }
+    }
+
+    // 刷新未读角标（轮询调用）
+    async function refreshMessageUnread() {
+        if (!window.__loggedIn) return;
+        const badge = document.getElementById('msgBadge');
+        if (!badge) return;
+        try {
+            const data = await fetchJson('/api/purchase/message/unread-count');
+            const n = Number(data.count) || 0;
+            badge.style.display = n > 0 ? '' : 'none';
+            badge.className = 'nav-badge' + (n === 0 ? ' zero' : '');
+            badge.textContent = n > 99 ? '99+' : n;
+        } catch (e) { /* 轮询失败静默 */ }
     }
 
     // 生成 JS 字符串字面量(带转义)
@@ -1392,12 +1823,12 @@
         return "'" + String(s ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
     }
 
-    // 通用表格渲染
+    // 通用表格渲染（字段统一 HTML 转义，防注入）
     function tableHtml(list) {
         if (!list || !list.length) return '';
         const keys = Object.keys(list[0]);
-        return '<table><thead><tr>' + keys.map(k => '<th>' + k + '</th>').join('') + '</tr></thead><tbody>' +
-            list.map(row => '<tr>' + keys.map(k => '<td>' + (row[k] ?? '') + '</td>').join('') + '</tr>').join('') +
+        return '<table><thead><tr>' + keys.map(k => '<th>' + escapeHtml(k) + '</th>').join('') + '</tr></thead><tbody>' +
+            list.map(row => '<tr>' + keys.map(k => '<td>' + escapeHtml(row[k]) + '</td>').join('') + '</tr>').join('') +
             '</tbody></table>';
     }
 
@@ -1424,18 +1855,21 @@
         };
         if (!p.name || !p.department || !p.gender || !p.work)
             return show('addWorkerResult', '请填写姓名/部门/性别/职务', true);
-        try {
-            const rows = await fetchJson('/api/add', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams(p).toString()
-            });
-            show('addWorkerResult', rows > 0 ? '添加成功' : '添加失败', rows <= 0);
-            if (rows > 0) {
-                ['wName', 'wDepartment', 'wGender', 'wWork'].forEach(id => document.getElementById(id).value = '');
-                loadWorkers();
-            }
-        } catch (e) { show('addWorkerResult', '添加失败: ' + e.message, true); }
+        await withBusy('addWorkerBtn', '添加中...', async () => {
+            try {
+                const rows = await fetchJson('/api/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams(p).toString()
+                });
+                show('addWorkerResult', rows > 0 ? '添加成功' : '添加失败', rows <= 0);
+                if (rows > 0) {
+                    toast('员工已添加', 'ok');
+                    ['wName', 'wDepartment', 'wGender', 'wWork'].forEach(id => document.getElementById(id).value = '');
+                    loadWorkers();
+                }
+            } catch (e) { show('addWorkerResult', '添加失败: ' + e.message, true); }
+        });
     }
 
     // 10. 修改员工
@@ -1450,15 +1884,17 @@
         };
         if (!p.id || !p.name || !p.department || !p.gender || !p.work)
             return show('editWorkerResult', '请填写ID/姓名/部门/性别/职务', true);
-        try {
-            const rows = await fetchJson('/api/edit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams(p).toString()
-            });
-            show('editWorkerResult', rows > 0 ? '修改成功' : '修改失败(可能ID不存在)', rows <= 0);
-            if (rows > 0) loadWorkers();
-        } catch (e) { show('editWorkerResult', '修改失败: ' + e.message, true); }
+        await withBusy('editWorkerBtn', '修改中...', async () => {
+            try {
+                const rows = await fetchJson('/api/edit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams(p).toString()
+                });
+                show('editWorkerResult', rows > 0 ? '修改成功' : '修改失败(可能ID不存在)', rows <= 0);
+                if (rows > 0) { toast('员工信息已更新', 'ok'); loadWorkers(); }
+            } catch (e) { show('editWorkerResult', '修改失败: ' + e.message, true); }
+        });
     }
 
     // 11. 辞退员工
@@ -1467,11 +1903,13 @@
         const id = document.getElementById('fwId').value.trim();
         if (!id) return show('fireWorkerResult', '请输入员工ID', true);
         if (!confirm('确定辞退员工(ID=' + id + ') 吗？')) return;
-        try {
-            const rows = await fetchJson('/api/delete?id=' + encodeURIComponent(id));
-            show('fireWorkerResult', rows > 0 ? '辞退成功' : '辞退失败(可能ID不存在)', rows <= 0);
-            if (rows > 0) { document.getElementById('fwId').value = ''; loadWorkers(); }
-        } catch (e) { show('fireWorkerResult', '辞退失败: ' + e.message, true); }
+        await withBusy('fireWorkerBtn', '辞退中...', async () => {
+            try {
+                const rows = await fetchJson('/api/delete?id=' + encodeURIComponent(id));
+                show('fireWorkerResult', rows > 0 ? '辞退成功' : '辞退失败(可能ID不存在)', rows <= 0);
+                if (rows > 0) { toast('员工已辞退', 'ok'); document.getElementById('fwId').value = ''; loadWorkers(); }
+            } catch (e) { show('fireWorkerResult', '辞退失败: ' + e.message, true); }
+        });
     }
 
     // 12. 查看数据表
@@ -1554,13 +1992,16 @@
         return false;
     }
 
-    // 18. 身份检查(是否商家)
+    // 18. 身份检查(角色权限)
     async function checkIdentityPermission() {
         markActive('identityCheck');
         try {
             const data = await fetchJson('/api/purchase/identity/check', { method: 'PUT' });
+            const perms = [];
+            if (data.canModify) perms.push('可增删改商品');
+            if (data.canViewEmployees) perms.push('可查看员工模块');
             show('identityCheckResult', (data.message || JSON.stringify(data, null, 2)) +
-                (data.canModify ? '（拥有商品修改权限）' : '（无商品修改权限）'), !data.success);
+                '（' + (perms.length ? perms.join('、') : '仅可浏览商品') + '）', !data.success);
         } catch (e) { show('identityCheckResult', '检查失败: ' + e.message, true); }
         return false;
     }
@@ -1583,6 +2024,16 @@
         const productInput = document.getElementById('commentProductName');
         if (contentInput) contentInput.addEventListener('input', updatePublishBtn);
         if (productInput) productInput.addEventListener('input', updatePublishBtn);
+        const filterInput = document.getElementById('commentFilter');
+        if (filterInput) {
+            let t;
+            filterInput.addEventListener('input', () => {
+                clearTimeout(t);
+                t = setTimeout(loadComments, 400);
+            });
+        }
+        initScrollSpy();
+        bindEnter();
         try {
             const data = await fetch('/api/auth/status');
             const status = await data.json();

@@ -88,8 +88,8 @@ public class AuthController {
         try {
             int isMerchant = (isOrdinaryUser != null && isOrdinaryUser) ? 1 : 0;
             int rows = jdbcTemplate.update(
-                    "INSERT INTO LogIn.users (username, email, password_hash, salt, full_name, phone, status, is_ordinary_user) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, 1, ?)",
+                    "INSERT INTO LogIn.users (username, email, password_hash, salt, full_name, phone, status, is_ordinary_user, role) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, 1, ?, 'user')",
                     username,
                     (email == null || email.isBlank()) ? null : email,
                     sha256Hex(password + DEFAULT_SALT),
@@ -115,7 +115,7 @@ public class AuthController {
                                      @RequestParam String username,
                                      @RequestParam String password) {
         List<Map<String, Object>> userList = jdbcTemplate.queryForList(
-                "SELECT id, username, password_hash, salt, full_name, status, is_ordinary_user FROM LogIn.users WHERE username = ?",
+                "SELECT id, username, password_hash, salt, full_name, status, is_ordinary_user, role FROM LogIn.users WHERE username = ?",
                 username);
 
         if (userList.isEmpty()) {
@@ -139,11 +139,17 @@ public class AuthController {
         HttpSession session = request.getSession(true);
         Object merchantFlag = user.get("is_ordinary_user");
         boolean isOrdinaryUser = (merchantFlag != null) && ((Number) merchantFlag).intValue() == 1;
+        // 角色: 优先取 role 列，旧数据无 role 时按 is_ordinary_user 回退
+        Object roleObj = user.get("role");
+        String role = (roleObj == null || String.valueOf(roleObj).isBlank())
+                ? (isOrdinaryUser ? "merchant" : "user")
+                : String.valueOf(roleObj);
         session.setAttribute(SESSION_USER_KEY, Map.of(
                 "id", user.get("id"),
                 "username", user.get("username"),
                 "fullName", user.get("full_name"),
-                "isOrdinaryUser", isOrdinaryUser));
+                "isOrdinaryUser", isOrdinaryUser,
+                "role", role));
 
         int userId = ((Number) user.get("id")).intValue();
         String clientIp = request.getRemoteAddr();
@@ -157,11 +163,12 @@ public class AuthController {
                 "INSERT INTO LogIn.login_logs (user_id, ip_address, user_agent, login_result) VALUES (?, ?, ?, 1)",
                 userId, clientIp, userAgent == null ? null : userAgent.substring(0, Math.min(userAgent.length(), 255)));
 
-        log.info("用户登录成功：{}", username);
+        log.info("用户登录成功：{} 角色:{}", username, role);
         return Map.of("success", true, "message", "登录成功",
                 "username", user.get("username"),
                 "fullName", user.get("full_name"),
-                "isOrdinaryUser", isOrdinaryUser);
+                "isOrdinaryUser", isOrdinaryUser,
+                "role", role);
     }
 
     // 登出

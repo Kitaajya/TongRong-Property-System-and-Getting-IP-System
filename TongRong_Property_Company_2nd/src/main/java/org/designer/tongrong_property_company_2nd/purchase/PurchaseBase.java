@@ -5,37 +5,74 @@ import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+/**数据库名->PurchaseBase.products**/
 /**
  * 备用参数
- * @RequestParam String productsName, @RequestParam String productsCategory,
- * @RequestParam double productsPrice, @RequestParam int productsStock,
- * @RequestParam String productsSupplier, @RequestParam String productsDescription,
+ * @RequestParam String productsName,
+ * @RequestParam String productsCategory,
+ * @RequestParam double productsPrice,
+ * @RequestParam int productsStock,
+ * @RequestParam String productsSupplier,
+ * @RequestParam String productsDescription,
  * **/
-//数据库名——>PurchaseBase.products
+
 @Slf4j
 @RestController
 @RequestMapping("/api/purchase")
 
 public class PurchaseBase {
-    //判断输入内容是否为空
+    /**判断输入内容是否为空**/
     public boolean isNullOrEmpty(String name) {
         return name == null || name.isEmpty();
     }
 
-    //判断商品是否存在
+    /**判断商品是否存在**/
     public boolean isContains(String name) {
         if (isNullOrEmpty(name)) return false;
         String SELECT_PRODUCTS = "SELECT COUNT(*) FROM PurchaseBase.products WHERE name = ?";
         Integer count = jdbcTemplate.queryForObject(SELECT_PRODUCTS, Integer.class, name);
         return count != null && count > 0;
+    }
+
+    /**从会话读取当前角色：merchant / manager / user**/
+    private String currentRole(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("loginUser") == null) return null;
+        Map<?, ?> loginUser = (Map<?, ?>) session.getAttribute("loginUser");
+        Object roleObj = loginUser.get("role");
+        String role = (roleObj == null || String.valueOf(roleObj).isBlank())
+                ? (Boolean.TRUE.equals(loginUser.get("isOrdinaryUser")) ? "merchant" : "user")
+                : String.valueOf(roleObj);
+        return role;
+    }
+
+    /**从会话读取当前登录用户名，未登录返回 null**/
+    private String currentUsername(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("loginUser") == null) return null;
+        Map<?, ?> loginUser = (Map<?, ?>) session.getAttribute("loginUser");
+        Object u = loginUser.get("username");
+        return u == null ? null : String.valueOf(u);
+    }
+
+    /**商家专属校验，非商家返回错误 Map，商家返回 null**/
+    private Map<String, Object> requireMerchant(HttpServletRequest request) {
+        if (!"merchant".equals(currentRole(request)))
+            return Map.of("success", false, "message", "仅商家可进行商品增删改操作");
+        return null;
     }
 
     @Autowired
@@ -55,7 +92,7 @@ public class PurchaseBase {
         return jdbcTemplate.queryForList(SELECT_SQL, selectName);
     }
 
-    //增强查询，模糊查询
+    /**增强查询，模糊查询**/
     @GetMapping("/select/single/product/undefined")
     public List<Map<String, Object>> selectSingleUndefinedProduct(@RequestParam String undefinedName) {
         log.info("模糊查找单个商品");
@@ -67,15 +104,18 @@ public class PurchaseBase {
                 "%" + undefinedName + "%",
                 "%" + undefinedName + "%");
     }
-    //添加单个商品
+    /**添加单个商品**/
     @PostMapping("/add/single/product")
-    public Map<String, Object> addSingleProduct(@RequestParam String productsName,
+    public Map<String, Object> addSingleProduct(HttpServletRequest request,
+                                                @RequestParam String productsName,
                                                 @RequestParam String productsCategory,
                                                 @RequestParam double productsPrice,
                                                 @RequestParam int productsStock,
                                                 @RequestParam String productsSupplier,
                                                 @RequestParam String productsDescription) {
         log.info("添加单个商品");
+        Map<String, Object> denied = requireMerchant(request);
+        if (denied != null) return denied;
         if (productsName.isEmpty() || productsCategory.isEmpty() || productsSupplier.isEmpty() || productsDescription.isEmpty())
             return Map.of("success", false, "message", "商品信息无效");
         String INSERT_Single_Product =
@@ -87,9 +127,10 @@ public class PurchaseBase {
         else return Map.of("success", false, "message", "商品添加失败");
     }
 
-    //添加更多商品
+    /**添加更多商品**/
     @PostMapping("/add/more/product")
-    public Map<String, Object> addMoreProduct(@RequestParam String productsName,
+    public Map<String, Object> addMoreProduct(HttpServletRequest request,
+                                              @RequestParam String productsName,
                                               @RequestParam String productsCategory,
                                               @RequestParam double productsPrice,
                                               @RequestParam int productsStock,
@@ -97,6 +138,8 @@ public class PurchaseBase {
                                               @RequestParam String productsDescription,
                                               @RequestParam int quantity) {
         log.info("添加更多商品");
+        Map<String, Object> denied = requireMerchant(request);
+        if (denied != null) return denied;
         if (quantity <= 0) return Map.of("success", false, "message", "商品个数必须是大于零的数！");
         String insertMoreProduct =
                 "INSERT INTO PurchaseBase.products (name, price, description, supplier, category, stock, create_time, update_time) " +
@@ -112,7 +155,7 @@ public class PurchaseBase {
         return Map.of("success", true, "message", "添加成功");
     }
 
-    //查询单个商品的价格
+    /**查询单个商品的价格**/
     @GetMapping("/select/single/product/price")
     public List<Map<String, Object>> selectOfSinglePrice(@RequestParam String productName) {
         log.info("查询单个商品的价格");
@@ -122,7 +165,7 @@ public class PurchaseBase {
         return jdbcTemplate.queryForList(selectProduct, productName);
     }
 
-    //查询更多商品的价格
+    /**查询更多商品的价格**/
     @GetMapping("/select/more/product/price")
     public List<Map<String, Object>> selectMoreProductsPrices(@RequestParam String productsName) {
         log.info("查询更多商品的价格");
@@ -139,7 +182,7 @@ public class PurchaseBase {
         return PRICE;
     }
 
-    //计算总价
+    /**计算总价**/
     @GetMapping("/calculate/total/price")
     public Map<String, Object> calculateTotalPrice(@RequestParam String products,
                                                    @RequestParam int quantity) {
@@ -156,7 +199,7 @@ public class PurchaseBase {
         return Map.of("success", true, "totalPrice", total);
     }
 
-    //带商品名的计算总价
+    /**带商品名的计算总价**/
     @GetMapping("/calculate/total/price/with/name")
     public Map<String, Object> selectProductsWithTotalPrice(@RequestParam String productsName) {
         log.info("带商品名的计算总价");
@@ -181,13 +224,16 @@ public class PurchaseBase {
      * 2. @GetMapping → @DeleteMapping，删除操作不该用 GET（否则浏览器或爬虫也能删数据）
      * 3. 判断改成 rows > 0，删除成功是返回 1
      * 4. @RequestParam int id 记得加 @RequestParam，否则必填参数名必须是方法参数名 id
-     *
      **/
-    //删除一个商品
+
+    /**删除一个商品**/
     @DeleteMapping("/delete/single/product")
-    public Map<String, Object> deleteSingleProduct(@RequestParam String productName,
+    public Map<String, Object> deleteSingleProduct(HttpServletRequest request,
+                                                   @RequestParam String productName,
                                                    @RequestParam int id) {
         log.info("删除一个商品");
+        Map<String, Object> denied = requireMerchant(request);
+        if (denied != null) return denied;
         if (isNullOrEmpty(productName))
             return Map.of("success", false, "message", "商品不能为空");
         if (!isContains(productName))
@@ -198,9 +244,10 @@ public class PurchaseBase {
         return Map.of("success", true, "message", "删除成功");
     }
 
-    //修改商品
+    /**修改商品**/
     @PutMapping("/edit/single/product")
-    public Map<String, Object> editSingleProduct(@RequestParam String productsName,
+    public Map<String, Object> editSingleProduct(HttpServletRequest request,
+                                                 @RequestParam String productsName,
                                                  @RequestParam int id,
                                                  @RequestParam String productsCategory,
                                                  @RequestParam double productsPrice,
@@ -208,6 +255,8 @@ public class PurchaseBase {
                                                  @RequestParam String productsSupplier,
                                                  @RequestParam String productsDescription) {
         log.info("修改商品");
+        Map<String, Object> denied = requireMerchant(request);
+        if (denied != null) return denied;
         if (isNullOrEmpty(productsName))
             return Map.of("success", false, "message", "商品不能为空");
         if (!isContains(productsName))
@@ -224,7 +273,7 @@ public class PurchaseBase {
         if (rows > 0) return Map.of("success", true, "message", "商品更新成功");
         return Map.of("success", false, "message", "商品不存在或更新失败");
     }
-    //插入一条商品评论
+    /**插入一条商品评论**/
     @PostMapping("/comment/insert") public Map<String,Object> commentInsert(@RequestParam String productName,
                                             @RequestParam String content,
                                             HttpServletRequest request ){
@@ -232,20 +281,89 @@ public class PurchaseBase {
         if(isNullOrEmpty (productName)||isNullOrEmpty(content))
             return Map.of("success", false, "message", "商品名或评论内容不能为空");
         //从会话中取当前登录用户,取不到则记为匿名
-        HttpSession session = request.getSession(false);
-        String username = "匿名";
-        if (session != null) {
-            Object loginUser = session.getAttribute("loginUser");
-            if (loginUser instanceof Map<?, ?> m && m.get("username") != null)
-                username = String.valueOf(m.get("username"));
-        }
+        String username = currentUsername(request);
+        if (username == null) username = "匿名";
+        final String author = username;
+        final String pName = productName.trim();
+        final String pContent = content.trim();
+        //插入评论并取回自增ID
         String INSERT_COMMENT =
                 "INSERT INTO PurchaseBase.comments (product_name, username, content) VALUES (?, ?, ?)";
-        int rows = jdbcTemplate.update(INSERT_COMMENT, productName.trim(), username, content.trim());
-        if (rows > 0) return Map.of("success", true, "message", "评论插入成功");
-        else return Map.of("success", false, "message", "评论插入失败");
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        int rows = jdbcTemplate.update(con -> {
+            PreparedStatement ps = con.prepareStatement(INSERT_COMMENT, Statement.RETURN_GENERATED_KEYS);
+            ps.setString(1, pName);
+            ps.setString(2, author);
+            ps.setString(3, pContent);
+            return ps;
+        }, keyHolder);
+        if (rows <= 0) return Map.of("success", false, "message", "评论插入失败");
+
+        //若为回复某条评论([回复#父ID]开头)，给被回复人生成一条"收到评论消息"
+        notifyReplyMessage(pName, author, pContent, keyHolder.getKey() == null ? 0 : ((Number) keyHolder.getKey()).intValue());
+        return Map.of("success", true, "message", "评论插入成功");
     }
-    //查询评论,可按商品名过滤
+
+    /**回复他人评论时，给被回复人生成一条消息通知**/
+    private static final Pattern REPLY_PATTERN = Pattern.compile("^\\[回复#(\\d+)\\]");
+    private void notifyReplyMessage(String productName, String sender, String content, int newCommentId) {
+        if (content == null || newCommentId <= 0) return;
+        Matcher m = REPLY_PATTERN.matcher(content);
+        if (!m.find()) return;
+        int parentId;
+        try {
+            parentId = Integer.parseInt(m.group(1));
+        } catch (NumberFormatException e) {
+            return;
+        }
+        List<Map<String, Object>> parents = jdbcTemplate.queryForList(
+                "SELECT username FROM PurchaseBase.comments WHERE id = ?", parentId);
+        if (parents.isEmpty()) return;
+        String receiver = String.valueOf(parents.get(0).get("username"));
+        if (receiver == null || receiver.isBlank() || receiver.equals(sender)) return;
+        jdbcTemplate.update(
+                "INSERT INTO PurchaseBase.comment_messages (receiver, sender, product_name, comment_id, content) VALUES (?, ?, ?, ?, ?)",
+                receiver, sender, productName, newCommentId, content);
+        log.info("已通知{}收到来自{}的评论回复", receiver, sender);
+    }
+
+    /**我收到的评论消息列表**/
+    @GetMapping("/message/list")
+    public List<Map<String,Object>> messageList(HttpServletRequest request){
+        String username = currentUsername(request);
+        if (username == null) return new ArrayList<>();
+        return jdbcTemplate.queryForList(
+                "SELECT id, sender, product_name, comment_id, content, is_read, create_time " +
+                        "FROM PurchaseBase.comment_messages WHERE receiver = ? ORDER BY id DESC", username);
+    }
+
+    /**我未读的评论消息数量**/
+    @GetMapping("/message/unread-count")
+    public Map<String,Object> messageUnreadCount(HttpServletRequest request){
+        String username = currentUsername(request);
+        if (username == null) return Map.of("count", 0);
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM PurchaseBase.comment_messages WHERE receiver = ? AND is_read = 0",
+                Integer.class, username);
+        return Map.of("count", count == null ? 0 : count);
+    }
+
+    /**标记评论消息已读（id 为空则全部已读）**/
+    @PutMapping("/message/read")
+    public Map<String,Object> messageRead(@RequestParam(required = false) Integer id, HttpServletRequest request){
+        String username = currentUsername(request);
+        if (username == null)
+            return Map.of("success", false, "message", "未登录");
+        int updated;
+        if (id != null)
+            updated = jdbcTemplate.update(
+                    "UPDATE PurchaseBase.comment_messages SET is_read = 1 WHERE id = ? AND receiver = ?", id, username);
+        else
+            updated = jdbcTemplate.update(
+                    "UPDATE PurchaseBase.comment_messages SET is_read = 1 WHERE receiver = ? AND is_read = 0", username);
+        return Map.of("success", true, "message", "操作成功", "updated", updated);
+    }
+    /**查询评论,可按商品名过滤**/
     @GetMapping("/comment/list")
     public List<Map<String,Object>> commentList(@RequestParam(required = false) String productName){
         String SELECT_COMMENTS_IF_NULL_OR_EMPTY ="SELECT id, product_name, username, content, create_time FROM PurchaseBase.comments ORDER BY id DESC";
@@ -255,15 +373,17 @@ public class PurchaseBase {
         return jdbcTemplate.queryForList(SELECT_COMMENTS_AND_NOT_NULL_OR_EMPTY, productName.trim());
     }
     /**
-     * 1.采购订单->表（商品+数量+供应商+总价）,状态流转:待审批->已审批->已收货->已取消  *
-     * 2.下单自动扣库存 + 库存校验(stock 不足就拒绝下单)                           *
-     * 3.库存预警->  stock <= 阈值的列表，如果库存小于n，触发预警
+     * 1.采购订单->表（商品+数量+供应商+总价）,状态流转:待审批->已审批->已收货->已取消。
+     * 2.下单自动扣库存 + 库存校验(stock 不足就拒绝下单)。
+     * 3.库存预警->  stock <= 阈值的列表，如果库存小于n，触发预警。
  **/
     //审批商品(通过/驳回)
     @PutMapping("/review")
     public Map<String,Object> reviewAndApprove(@RequestParam int id,
                                                @RequestParam String status,
                                                HttpServletRequest request) {
+        Map<String, Object> denied = requireMerchant(request);
+        if (denied != null) return denied;
         if (isNullOrEmpty(status))
             return Map.of("success", false, "message", "审批状态不能为空");
         if (!status.equals("已通过") && !status.equals("已驳回"))
@@ -271,17 +391,15 @@ public class PurchaseBase {
         String REVIEW_SQL = "UPDATE PurchaseBase.products SET status = ?, update_time = NOW() WHERE id = ?";
         int rows = jdbcTemplate.update(REVIEW_SQL, status, id);
         if (rows > 0) return Map.of("success", true, "message", "审批成功", "id", id, "status", status);
-        return Map.of("success", false, "message",
-
-    "商品不存在,审批失败");
+        return Map.of("success", false, "message", "商品不存在,审批失败");
     }
-    //查看待审核商品
+    /**查看待审核商品**/
     @GetMapping("/pending")
     public List<Map<String ,Object>> pendingProducts(){
         String PENDING_SQL="SELECT id,name,price,description,supplier,category,stock FROM PurchaseBase.products WHERE status = '待审核'";
         return jdbcTemplate.queryForList(PENDING_SQL);
     }
-    //库存预警列表：列出所有库存低于阈值(默认12)的商品
+    /**库存预警列表：列出所有库存低于阈值(默认12)的商品**/
     @GetMapping("/stock/warning")
     public List<Map<String, Object>> stockWarning(@RequestParam(defaultValue = "12") int threshold) {
         if (threshold <= 0) return new ArrayList<>();
@@ -308,10 +426,13 @@ public class PurchaseBase {
 
         return Map.of("success", true, "message", "库存充足，数量：" + k + "个", "canBeSend", true);
     }
-    //发送单个商品
+    /**发送单个商品**/
     @PutMapping("/send/single/product")
     @Transactional
-    public Map<String, Object> sendSingleProduct(@RequestParam String productName) {
+    public Map<String, Object> sendSingleProduct(@RequestParam String productName,
+                                                 HttpServletRequest request) {
+        Map<String, Object> denied = requireMerchant(request);
+        if (denied != null) return denied;
         if (!isContains(productName))
             return Map.of("success", false, "message", "商品不存在");
         // 原子扣减，只有库存>=阈值时才扣，避免竞态
@@ -322,39 +443,47 @@ public class PurchaseBase {
         return Map.of("success", true, "message", "准备发货，库存-1");
     }
 
-    /**读取注册用户身份，如果是普通用户，对商品操作没有任何增删改的操作权限。商家有权限修改商品信息**/
+    /**读取登录用户角色权限：
+     * 商家(merchant)：可增删改商品，看不到员工模块。
+     * 物管人员(manager)：可查看员工模块与数据，无商品增删改权限。
+     * 普通用户(user)：仅可浏览商品，无增删改、无员工模块。
+     **/
     @PutMapping("/identity/check")
     public Map<String,Object> revokeAndGrant(HttpServletRequest request){
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("loginUser") == null)
-            return Map.of("success", false, "message", "未登录", "canModify", false);
+            return Map.of("success", false, "message", "未登录", "canModify", false, "canViewEmployees", false);
         Map<?, ?> loginUser = (Map<?, ?>) session.getAttribute("loginUser");
-        String username = String.valueOf(loginUser.get("username"));
-        Integer k = jdbcTemplate.queryForObject(
-                "SELECT is_ordinary_user FROM LogIn.users WHERE username = ?",
-                Integer.class, username);
-        if (k == null || k == 0)
-            return Map.of("success", false, "message", "你没有任何权限修改商品", "canModify", false);
-        return Map.of("success", true, "message", "商家身份，可修改商品", "canModify", true);
+        Object roleObj = loginUser.get("role");
+        String role = (roleObj == null || String.valueOf(roleObj).isBlank())
+                ? (Boolean.TRUE.equals(loginUser.get("isOrdinaryUser")) ? "merchant" : "user")
+                : String.valueOf(roleObj);
+        boolean canModify = "merchant".equals(role);
+        boolean canViewEmployees = "manager".equals(role);
+        String message;
+        if (canModify) message = "商家身份，可修改商品";
+        else if (canViewEmployees) message = "物管人员，可查看员工模块，无商品修改权限";
+        else message = "普通用户，无商品修改权限";
+        return Map.of("success", true, "message", message, "canModify", canModify, "canViewEmployees", canViewEmployees);
     }
 
-    //UPDATE LogIn.users SET is_ordinary_user = 1 WHERE username='贾奕嘉'
+    /**授予商家权限，仅限物管人员(manager)操作，将目标用户升级为商家(merchant)**/
     @PutMapping("/identity/set")
-    public Map<String,Object> setRevokeAndGrant(Map<?,?> REVOKE_GRANT,@RequestParam String nameWill){
-        if(REVOKE_GRANT
-                .equals(Map.of("success", false, "message", "你没有任何权限修改商品", "canModify", false))){
-            return Map.of("success", false, "message", "你没有任何权限修改商品", "canModify", false);
-        }
-        /**表中找不到人**/
-        String SET_RIGHT="UPDATE LogIn.users SET is_ordinary_user = 1 WHERE username=?";
-        String IS_CONTAINS_NAME="SELECT username FROM LogIn.users WHERE username=?";
-        if(jdbcTemplate.queryForList(IS_CONTAINS_NAME,nameWill).isEmpty())
-            return Map.of("success",false,"message","找不到此人");
-        //输入null姓名
-        if(isNullOrEmpty(nameWill)) return Map.of("success",false,"message","姓名不能为空");
-        else {
-            jdbcTemplate.update(SET_RIGHT,nameWill);
-            return Map.of("success",true,"message","修改成功!");
-        }
+    public Map<String,Object> setRevokeAndGrant(HttpServletRequest request, @RequestParam String nameWill){
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("loginUser") == null)
+            return Map.of("success", false, "message", "未登录", "canModify", false);
+        Map<?, ?> loginUser = (Map<?, ?>) session.getAttribute("loginUser");
+        String role = String.valueOf(loginUser.get("role"));
+        if (!"manager".equals(role))
+            return Map.of("success", false, "message", "仅物管人员可设置商家权限");
+        if (isNullOrEmpty(nameWill)) return Map.of("success", false, "message", "姓名不能为空");
+        String IS_CONTAINS_NAME = "SELECT username FROM LogIn.users WHERE username=?";
+        if (jdbcTemplate.queryForList(IS_CONTAINS_NAME, nameWill).isEmpty())
+            return Map.of("success", false, "message", "找不到此人");
+        //升级为商家，同时维护 role 与旧字段 is_ordinary_user
+        String SET_RIGHT = "UPDATE LogIn.users SET is_ordinary_user = 1, role = 'merchant' WHERE username=?";
+        jdbcTemplate.update(SET_RIGHT, nameWill);
+        return Map.of("success", true, "message", "已授予商家权限");
     }
 }
