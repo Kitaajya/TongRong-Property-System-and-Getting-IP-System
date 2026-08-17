@@ -12,21 +12,18 @@ import org.springframework.web.bind.annotation.*;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 /**数据库名->PurchaseBase.products**/
 /**
  * 备用参数
- * @RequestParam String productsName,
- * @RequestParam String productsCategory,
- * @RequestParam double productsPrice,
- * @RequestParam int productsStock,
- * @RequestParam String productsSupplier,
- * @RequestParam String productsDescription,
+ * String productsName,
+ * String productsCategory,
+ * double productsPrice,
+ * int productsStock,
+ * String productsSupplier,
+ * String productsDescription,
  * **/
 
 @Slf4j
@@ -299,11 +296,41 @@ public class PurchaseBase {
         }, keyHolder);
         if (rows <= 0) return Map.of("success", false, "message", "评论插入失败");
 
-        //若为回复某条评论([回复#父ID]开头)，给被回复人生成一条"收到评论消息"
+        //若为回复某条评论，[回复#父ID]开头，给被回复人生成一条"收到评论消息"
         notifyReplyMessage(pName, author, pContent, keyHolder.getKey() == null ? 0 : ((Number) keyHolder.getKey()).intValue());
         return Map.of("success", true, "message", "评论插入成功");
     }
+    /*
+      PurchaseBase.comments 评论表
+      +-------------+------------------+------+-----+-------------------+----------------+
+      | Field       | Type             | Null | Key | Default           | Extra          |
+      +-------------+------------------+------+-----+-------------------+----------------+
+      | id          | int unsigned     | NO   | PRI | NULL              | auto_increment |
+      | product_name| varchar(100)     | NO   | MUL | NULL              |                |
+      | username    | varchar(50)      | NO   |     | NULL              |                |
+      | content     | text             | NO   |     | NULL              |                |
+      +-------------+------------------+------+-----+-------------------+----------------+
+     */
+    /**删除且只能删除自己的评论**/
+    @DeleteMapping("/delete/my/comments")
+    public Map<String,Object> deleteMyComments(@RequestParam int deleteId,
+                                               HttpServletRequest request){
+        String username = currentUsername(request);
+        if (username == null) return Map.of("success", false, "message", "未登录");
 
+        List<Map<String,Object>> rows = jdbcTemplate.queryForList(
+                "SELECT id, username FROM PurchaseBase.comments WHERE id = ?", deleteId);
+        if (rows.isEmpty()) return Map.of("success", false, "message", "评论不存在");
+
+        String author = String.valueOf(rows.get(0).get("username"));
+        if (!author.equals(username))
+            return Map.of("success", false, "message", "只能删除自己的评论");
+
+        jdbcTemplate.update("DELETE FROM PurchaseBase.comment_likes WHERE comment_id = ?", deleteId);
+        jdbcTemplate.update("DELETE FROM PurchaseBase.comment_messages WHERE comment_id = ?", deleteId);
+        jdbcTemplate.update("DELETE FROM PurchaseBase.comments WHERE id = ?", deleteId);
+        return Map.of("success", true, "message", "删除成功");
+    }
     /**回复他人评论时，给被回复人生成一条消息通知**/
     private static final Pattern REPLY_PATTERN = Pattern.compile("^\\[回复#(\\d+)\\]");
     private void notifyReplyMessage(String productName, String sender, String content, int newCommentId) {
@@ -365,19 +392,79 @@ public class PurchaseBase {
     }
     /**查询评论,可按商品名过滤**/
     @GetMapping("/comment/list")
-    public List<Map<String,Object>> commentList(@RequestParam(required = false) String productName){
-        String SELECT_COMMENTS_IF_NULL_OR_EMPTY ="SELECT id, product_name, username, content, create_time FROM PurchaseBase.comments ORDER BY id DESC";
-        String SELECT_COMMENTS_AND_NOT_NULL_OR_EMPTY="SELECT id, product_name, username, content, create_time FROM PurchaseBase.comments WHERE product_name = ? ORDER BY id DESC";
+    public List<Map<String,Object>> commentList(@RequestParam(required = false) String productName,
+                                                HttpServletRequest request){
+        String username = currentUsername(request);
+        String SELECT_ALL = "SELECT id, product_name, username, content, like_count, create_time FROM PurchaseBase.comments ORDER BY id DESC";
+        String SELECT_BY_PRODUCT = "SELECT id, product_name, username, content, like_count, create_time FROM PurchaseBase.comments WHERE product_name = ? ORDER BY id DESC";
+        List<Map<String,Object>> list;
         if (isNullOrEmpty(productName))
-            return jdbcTemplate.queryForList(SELECT_COMMENTS_IF_NULL_OR_EMPTY);
-        return jdbcTemplate.queryForList(SELECT_COMMENTS_AND_NOT_NULL_OR_EMPTY, productName.trim());
+            list = jdbcTemplate.queryForList(SELECT_ALL);
+        else
+            list = jdbcTemplate.queryForList(SELECT_BY_PRODUCT, productName.trim());
+        if (username != null && !list.isEmpty()) {
+            List<Map<String,Object>> liked = jdbcTemplate.queryForList(
+                    "SELECT comment_id FROM PurchaseBase.comment_likes WHERE username = ?", username);
+            java.util.Set<Integer> likedIds = new java.util.HashSet<>();
+            for (Map<String,Object> row : liked) likedIds.add(((Number)row.get("comment_id")).intValue());
+            for (Map<String,Object> c : list) {
+                int cid = ((Number)c.get("id")).intValue();
+                c.put("liked", likedIds.contains(cid));
+            }
+        } else {
+            for (Map<String,Object> c : list) c.put("liked", false);
+        }
+        return list;
     }
     /**
      * 1.采购订单->表（商品+数量+供应商+总价）,状态流转:待审批->已审批->已收货->已取消。
      * 2.下单自动扣库存 + 库存校验(stock 不足就拒绝下单)。
      * 3.库存预警->  stock <= 阈值的列表，如果库存小于n，触发预警。
- **/
-    //审批商品(通过/驳回)
+    **/
+    /**点赞、取消点赞评论、切换**/
+    @PutMapping("/comment/like")
+    @Transactional
+    public Map<String,Object> toggleLike(@RequestParam int commentId, HttpServletRequest request){
+        String username = currentUsername(request);
+        if (username == null) return Map.of("success", false, "message", "未登录");
+        List<Map<String,Object>> exist = jdbcTemplate.queryForList(
+                "SELECT id FROM PurchaseBase.comments WHERE id = ?", commentId);
+        if (exist.isEmpty()) return Map.of("success", false, "message", "评论不存在");
+        List<Map<String,Object>> already = jdbcTemplate.queryForList(
+                "SELECT id FROM PurchaseBase.comment_likes WHERE comment_id = ? AND username = ?",
+                commentId, username);
+        if (!already.isEmpty()) {
+            jdbcTemplate.update("DELETE FROM PurchaseBase.comment_likes WHERE comment_id = ? AND username = ?",
+                    commentId, username);
+            jdbcTemplate.update("UPDATE PurchaseBase.comments SET like_count = like_count - 1 WHERE id = ? AND like_count > 0",
+                    commentId);
+            return Map.of("success", true, "liked", false, "message", "已取消点赞");
+        } else {
+            jdbcTemplate.update("INSERT INTO PurchaseBase.comment_likes (comment_id, username) VALUES (?, ?)", commentId, username);
+            jdbcTemplate.update("UPDATE PurchaseBase.comments SET like_count = like_count + 1 WHERE id = ?", commentId);
+            return Map.of("success", true, "liked", true, "message", "点赞成功");
+        }
+    }
+
+    /**删除自己的评论**/
+    @DeleteMapping("/comment/delete")
+    public Map<String,Object> deleteMyComment(@RequestParam int deleteId,
+                                              HttpServletRequest request){
+        String username = currentUsername(request);
+        if (username == null) return Map.of("success", false, "message", "未登录");
+        List<Map<String,Object>> rows = jdbcTemplate.queryForList(
+                "SELECT id, username FROM PurchaseBase.comments WHERE id = ?", deleteId);
+        if (rows.isEmpty()) return Map.of("success", false, "message", "评论不存在");
+        String author = String.valueOf(rows.get(0).get("username"));
+        if (!author.equals(username))
+            return Map.of("success", false, "message", "只能删除自己的评论");
+        jdbcTemplate.update("DELETE FROM PurchaseBase.comment_likes WHERE comment_id = ?", deleteId);
+        jdbcTemplate.update("DELETE FROM PurchaseBase.comment_messages WHERE comment_id = ?", deleteId);
+        jdbcTemplate.update("DELETE FROM PurchaseBase.comments WHERE id = ?", deleteId);
+        return Map.of("success", true, "message", "删除成功");
+    }
+
+    /**审批商品，通过与驳回**/
     @PutMapping("/review")
     public Map<String,Object> reviewAndApprove(@RequestParam int id,
                                                @RequestParam String status,
@@ -399,7 +486,7 @@ public class PurchaseBase {
         String PENDING_SQL="SELECT id,name,price,description,supplier,category,stock FROM PurchaseBase.products WHERE status = '待审核'";
         return jdbcTemplate.queryForList(PENDING_SQL);
     }
-    /**库存预警列表：列出所有库存低于阈值(默认12)的商品**/
+    /**库存预警列表：列出所有库存低于阈值（默认12）的商品**/
     @GetMapping("/stock/warning")
     public List<Map<String, Object>> stockWarning(@RequestParam(defaultValue = "12") int threshold) {
         if (threshold <= 0) return new ArrayList<>();
@@ -467,7 +554,7 @@ public class PurchaseBase {
         return Map.of("success", true, "message", message, "canModify", canModify, "canViewEmployees", canViewEmployees);
     }
 
-    /**授予商家权限，仅限物管人员(manager)操作，将目标用户升级为商家(merchant)**/
+    /**授予商家权限，仅限物管人员（manager）操作，将目标用户升级为商家（merchant）**/
     @PutMapping("/identity/set")
     public Map<String,Object> setRevokeAndGrant(HttpServletRequest request, @RequestParam String nameWill){
         HttpSession session = request.getSession(false);
@@ -485,5 +572,63 @@ public class PurchaseBase {
         String SET_RIGHT = "UPDATE LogIn.users SET is_ordinary_user = 1, role = 'merchant' WHERE username=?";
         jdbcTemplate.update(SET_RIGHT, nameWill);
         return Map.of("success", true, "message", "已授予商家权限");
+    }
+    /**
+     * 改名程序：
+     * 改用户名需要同时改4张表：
+     * LogIn.users -> username（主表）
+     * PurchaseBase.comments -> username（评论者）
+     * PurchaseBase.comment_messages -> sender + receiver（消息收发双方）
+     * PurchaseBase.comment_likes -> username（点赞记录）
+     * **/
+    //@Transactional
+    @PutMapping("/edit/username")
+    public Map<String,Object> editName(@RequestParam String oldName,@RequestParam String newName,HttpServletRequest request){
+        String cname=currentUsername(request);
+        if(cname==null) return Map.of("success",false,"message","未登录！");
+        if(!Objects.equals(cname, oldName)) return Map.of("success",false,"message","只能改自己的名！");
+        else {
+
+            String EDIT_OLD_NAME_ON_LogIn_users= """
+                    UPDATE LogIn.users
+                    SET username=?, full_name=?
+                    WHERE username=?
+                    """;
+            int ROW_LOGIN=jdbcTemplate.update(EDIT_OLD_NAME_ON_LogIn_users,newName,newName,oldName);
+            if(ROW_LOGIN<=0) return Map.of("success",false,"message","登录表改名失败！");
+
+            String EDIT_OLD_NAME_ON_PurchaseBase_comments= """
+                    UPDATE PurchaseBase.comments
+                    SET username=?
+                    WHERE username=?
+                    """;
+            int ROW_PURCHASE=jdbcTemplate.update(EDIT_OLD_NAME_ON_PurchaseBase_comments,newName,oldName);
+            if(ROW_PURCHASE<=0) return Map.of("success",false,"message","商品表改名失败！");
+
+            String EDIT_OLD_NAME_ON_PurchaseBase_comment_messages_FOR_sender = """
+                    UPDATE PurchaseBase.comment_messages
+                    SET sender=?
+                    where sender=?
+                    """;
+            jdbcTemplate.update(EDIT_OLD_NAME_ON_PurchaseBase_comment_messages_FOR_sender,
+                    newName,oldName);
+            String EDIT_OLD_NAME_ON_PurchaseBase_comment_messages_FOR_receiver= """
+                    UPDATE PurchaseBase.comment_messages
+                    SET receiver=?
+                    WHERE receiver=?
+                    """;
+            jdbcTemplate.update(EDIT_OLD_NAME_ON_PurchaseBase_comment_messages_FOR_receiver,newName,oldName);
+            String EDIT_OLD_NAME_ON_PurchaseBase_comment_likes= """
+                    UPDATE PurchaseBase.comment_likes
+                    SET username=?
+                    WHERE username=?
+                    """;
+            jdbcTemplate.update(EDIT_OLD_NAME_ON_PurchaseBase_comment_likes,newName,oldName);
+        }
+        @SuppressWarnings("unchecked")
+        Map<String,Object> loginUser = new java.util.HashMap<>((Map<String,Object>) request.getSession(false).getAttribute("loginUser"));
+        loginUser.put("username", newName);
+        request.getSession(false).setAttribute("loginUser", loginUser);
+        return Map.of("success",true,"message","改名成功");
     }
 }

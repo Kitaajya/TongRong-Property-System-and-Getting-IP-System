@@ -239,6 +239,11 @@
         }
         .comment-empty { text-align: center; padding: 40px 0; color: #999; font-size: 14px; }
         .comment-actions { display: flex; gap: 12px; align-items: center; margin-top: 2px; }
+        .like-btn { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: #999; cursor: pointer; user-select: none; padding: 2px 6px; border-radius: 4px; transition: all .15s; }
+        .like-btn:hover { background: #fff1f2; color: #ef4444; }
+        .like-btn.liked { color: #ef4444; font-weight: 600; }
+        .like-btn .like-icon { font-size: 15px; transition: transform .2s; }
+        .like-btn.liked .like-icon { transform: scale(1.2); }
         .sub-reply-wrap { margin-top: 12px; margin-left: 52px; padding-left: 12px; border-left: 1px solid #eee; }
         .sub-reply-list { margin-top: 8px; }
         .sub-reply-item { padding: 6px 0; font-size: 14px; color: #333; line-height: 1.6; word-break: break-word; }
@@ -527,6 +532,7 @@
                 <a href="#" data-nav="cert" onclick="return checkIdentity()">实名认证</a>
                 <a href="#" data-nav="identityCheck" onclick="return checkIdentityPermission()">身份检查</a>
                 <a href="#" data-nav="identitySet" onclick="return setMerchantPermission()">设置商家权限</a>
+                <a href="#" data-nav="editName" onclick="return loadEditName()">修改用户名</a>
             </nav>
         </div>
     </aside>
@@ -853,6 +859,16 @@
         <div id="identityCheckResult" class="result"></div>
     </section>
 
+    <!-- 修改用户名 -->
+    <section id="sec-editName">
+        <h2>修改用户名</h2>
+        <p class="section-tip">修改后所有评论、消息中的用户名将同步更新</p>
+        <input id="editOldName" placeholder="当前用户名（旧名）">
+        <input id="editNewName" placeholder="新用户名">
+        <button id="editNameBtn" onclick="doEditName()">确认修改</button>
+        <div id="editNameResult" class="result"></div>
+    </section>
+
     <!-- 设置商家权限 -->
     <section id="sec-identitySet">
         <h2>设置商家权限</h2>
@@ -947,6 +963,7 @@
 
     function showMain(user) {
         window.__loggedIn = true;
+        window.__myUsername = (user && user.username) || '';
         document.getElementById('loginSection').classList.add('hidden');
         document.getElementById('mainContent').classList.remove('hidden');
         document.getElementById('logoutBtn').classList.remove('hidden');
@@ -1585,13 +1602,15 @@
         if (m) {
             return {
                 id: c.id, product_name: c.product_name, username: c.username,
-                create_time: c.create_time, parentId: Number(m[1]),
+                create_time: c.create_time, like_count: c.like_count || 0, liked: c.liked || false,
+                parentId: Number(m[1]),
                 mention: m[2] || '', text: m[3] || ''
             };
         }
         return {
             id: c.id, product_name: c.product_name, username: c.username,
-            create_time: c.create_time, parentId: null, mention: '', text: c.content ?? ''
+            create_time: c.create_time, like_count: c.like_count || 0, liked: c.liked || false,
+            parentId: null, mention: '', text: c.content ?? ''
         };
     }
 
@@ -1640,7 +1659,16 @@
                     '<div class="comment-main">' +
                         '<div class="user-info">' + escapeHtml(main.username) + '<span class="time">' + escapeHtml(main.create_time) + '</span></div>' +
                         '<div class="comment-text">' + escapeHtml(main.text) + '</div>' +
-                        '<div class="comment-actions"><span class="reply-btn" onclick="toggleReplyInput(' + main.id + ', ' + quoteJs(main.username) + ')">回复</span></div>' +
+                        '<div class="comment-actions">' +
+                            '<span class="like-btn' + (main.liked ? ' liked' : '') + '" onclick="toggleLike(' + main.id + ', this)">' +
+                                '<span class="like-icon">' + (main.liked ? '❤' : '♡') + '</span>' +
+                                '<span class="like-count">' + (main.like_count || 0) + '</span>' +
+                            '</span>' +
+                            '<span class="reply-btn" onclick="toggleReplyInput(' + main.id + ', ' + quoteJs(main.username) + ')">回复</span>' +
+                            (main.username === window.__myUsername
+                                ? '<span class="reply-btn" style="color:#ef4444" onclick="deleteComment(' + main.id + ')">删除</span>'
+                                : '') +
+                        '</div>' +
                     '</div>' +
                 '</div>' +
                 subToggle + subList + replyInput +
@@ -1821,6 +1849,40 @@
     // 生成 JS 字符串字面量(带转义)
     function quoteJs(s) {
         return "'" + String(s ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
+    }
+
+    // 点赞/取消点赞
+    async function toggleLike(commentId, btn) {
+        try {
+            const data = await fetchJson('/api/purchase/comment/like?' + new URLSearchParams({ commentId }).toString(), { method: 'PUT' });
+            if (!data.success) { toast(data.message || '操作失败', 'err'); return; }
+            const icon = btn.querySelector('.like-icon');
+            const countEl = btn.querySelector('.like-count');
+            let count = parseInt(countEl.textContent) || 0;
+            if (data.liked) {
+                btn.classList.add('liked');
+                icon.textContent = '❤';
+                countEl.textContent = count + 1;
+            } else {
+                btn.classList.remove('liked');
+                icon.textContent = '♡';
+                countEl.textContent = Math.max(0, count - 1);
+            }
+        } catch (e) { toast('点赞失败: ' + e.message, 'err'); }
+    }
+
+    // 删除自己的评论
+    async function deleteComment(commentId) {
+        if (!confirm('确定删除这条评论吗？')) return;
+        try {
+            const data = await fetchJson('/api/purchase/comment/delete?deleteId=' + commentId, { method: 'DELETE' });
+            if (data.success) {
+                toast('评论已删除', 'ok');
+                loadComments();
+            } else {
+                toast(data.message || '删除失败', 'err');
+            }
+        } catch (e) { toast('删除失败: ' + e.message, 'err'); }
     }
 
     // 通用表格渲染（字段统一 HTML 转义，防注入）
@@ -2016,6 +2078,36 @@
             show('identitySetResult', data.message || JSON.stringify(data, null, 2), !data.success);
         } catch (e) { show('identitySetResult', '设置失败: ' + e.message, true); }
         return false;
+    }
+
+    // 19. 修改用户名
+    async function loadEditName() {
+        markActive('editName');
+        const oldInput = document.getElementById('editOldName');
+        if (oldInput && window.__myUsername) oldInput.value = window.__myUsername;
+        return false;
+    }
+
+    async function doEditName() {
+        const oldName = document.getElementById('editOldName').value.trim();
+        const newName = document.getElementById('editNewName').value.trim();
+        if (!oldName || !newName) return show('editNameResult', '请填写旧用户名和新用户名', true);
+        if (oldName === newName) return show('editNameResult', '新旧用户名不能相同', true);
+        await withBusy('editNameBtn', '修改中...', async () => {
+            try {
+                const data = await fetchJson('/api/purchase/edit/username?' + new URLSearchParams({ oldName, newName }).toString(), { method: 'PUT' });
+                show('editNameResult', data.message || JSON.stringify(data, null, 2), !data.success);
+                if (data.success) {
+                    toast('改名成功', 'ok');
+                    window.__myUsername = newName;
+                    document.getElementById('userInfo').textContent = '当前用户：' + newName;
+                    const av = document.getElementById('publishAvatar');
+                    if (av) av.textContent = newName[0];
+                    loadComments();
+                    loadMessages();
+                }
+            } catch (e) { show('editNameResult', '改名失败: ' + e.message, true); }
+        });
     }
 
     // 页面加载时检查登录状态

@@ -10,10 +10,24 @@ CREATE TABLE IF NOT EXISTS `comments` (
     `product_name` VARCHAR(100) NOT NULL COMMENT '被评论的商品名称',
     `username`     VARCHAR(50)  NOT NULL COMMENT '评论用户(登录账号)',
     `content`      TEXT         NOT NULL COMMENT '评论内容',
+    `like_count`   INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '点赞数',
     `create_time`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '评论时间',
     PRIMARY KEY (`id`),
     KEY `idx_product_name` (`product_name`) COMMENT '商品名索引'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商品评论表';
+
+-- =============================================
+-- 评论点赞记录表：每人每条评论只能点一次赞
+-- =============================================
+CREATE TABLE IF NOT EXISTS `comment_likes` (
+    `id`         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `comment_id` INT UNSIGNED NOT NULL COMMENT '评论ID',
+    `username`   VARCHAR(50)  NOT NULL COMMENT '点赞用户',
+    `created_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '点赞时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_comment_user` (`comment_id`, `username`) COMMENT '同一用户对同一条评论只能赞一次',
+    KEY `idx_username` (`username`) COMMENT '用户索引'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='评论点赞记录表';
 
 -- =============================================
 -- 收到评论消息表：当有人回复你的评论时生成一条消息
@@ -32,3 +46,8 @@ CREATE TABLE IF NOT EXISTS `comment_messages` (
     KEY `idx_receiver_read` (`receiver`, `is_read`) COMMENT '接收者+已读索引',
     KEY `idx_comment_id` (`comment_id`) COMMENT '评论ID索引'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='收到评论消息表';
+
+-- =============================================
+-- 存量数据库升级: comments 表新增 like_count 列
+-- 已建过表时手动执行:
+-- ALTER TABLE `PurchaseBase`.`comments` ADD COLUMN `like_count` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '点赞数' AFTER `content`;
