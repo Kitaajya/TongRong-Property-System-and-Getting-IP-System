@@ -1,30 +1,33 @@
 package org.designer.tongrong_property_company_2nd;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcOperations;
+import lombok.RequiredArgsConstructor;
+import org.designer.tongrong_property_company_2nd.service.DatabaseService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
+
 @RestController
 @RequestMapping("/api")
+@RequiredArgsConstructor
 public class GetNameOfDatabaseWhichWeForgot {
-    @Autowired
-    private JdbcOperations jdbcTemplate;
+
+    private final DatabaseService databaseService;
+
     @RequestMapping("/tables")
     public List<Map<String, Object>> tables() {
-        //数据库名"exception_table_of_salary"&"log_in"
-        return jdbcTemplate.queryForList(
-                "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = 'Tongrong_Company'");
+        return databaseService.showTables();
     }
+
     @GetMapping("/travel_log_in")
-    public List<Map<String,Object>> travelTable(){
-        return jdbcTemplate.queryForList("SELECT * FROM log_in");
+    public List<Map<String, Object>> travelTable() {
+        return databaseService.travelLogIn();
     }
-    @GetMapping("travel_exception")
-    public List<Map<String,Object>> travelExceptionTable(){
-        return jdbcTemplate.queryForList("SELECT * FROM exception_table_of_salary");
+
+    @GetMapping("/travel_exception")
+    public List<Map<String, Object>> travelExceptionTable() {
+        return databaseService.travelExceptionTable();
     }
 }

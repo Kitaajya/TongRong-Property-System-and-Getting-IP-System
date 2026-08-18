@@ -1,8 +1,8 @@
 package org.designer.tongrong_property_company_2nd.auth;
 
 import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -14,15 +14,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
-/**
- * 邮箱验证码服务：生成 -> 发送 -> 存储 -> 校验
- * 验证码保存在内存 Map 中，重启服务即失效；适合学习 / 小规模项目
- */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class EmailCodeService {
 
-    /** 单条验证码记录：验证码 + 过期时间 + 上次发送时间 */
     private record CodeEntry(String code, LocalDateTime expireAt, LocalDateTime lastSendAt) {}
 
     private final Map<String, CodeEntry> codeStore = new ConcurrentHashMap<>();
@@ -38,12 +34,8 @@ public class EmailCodeService {
     @Value("${spring.mail.username:}")
     private String senderEmail;
 
-    @Autowired
-    private JavaMailSender mailSender;
+    private final JavaMailSender mailSender;
 
-    /**
-     * 发送验证码：校验邮箱格式 -> 频率限制 -> 生成6位数字 -> 发送
-     */
     public Map<String, Object> sendCode(String email) {
         if (email == null || !EMAIL_PATTERN.matcher(email.trim()).matches())
             return Map.of("success", false, "message", "邮箱格式不正确");
@@ -68,10 +60,6 @@ public class EmailCodeService {
         }
     }
 
-    /**
-     * 校验验证码：成功返回 null，失败返回错误信息
-     * 无论成功与否都会立即作废该验证码（一次性）
-     */
     public String verify(String email, String code) {
         if (email == null || code == null) return "邮箱或验证码不能为空";
         email = email.trim().toLowerCase();

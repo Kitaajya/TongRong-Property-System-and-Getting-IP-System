@@ -505,6 +505,7 @@
                 <a href="#" data-nav="warning" onclick="return loadStockWarning()">库存预警</a>
                 <a href="#" data-nav="send" onclick="return sendProduct()">商品发货</a>
                 <a href="#" data-nav="pending" onclick="return loadPending()">商品审批</a>
+                <a href="#" data-nav="uploadImg" onclick="return loadUploadImg()">上传商品图片</a>
             </nav>
         </div>
         <div id="group-worker">
@@ -714,6 +715,16 @@
             <button id="delBtn" class="danger" onclick="deleteProduct()">删除</button>
         </div>
         <div id="editResult" class="result"></div>
+    </section>
+
+    <!-- 库存检查 -->
+    <section id="sec-uploadImg">
+        <h2>上传商品图片</h2>
+        <p class="section-tip">为指定商品上传一张图片</p>
+        <input id="uploadImgId" type="number" placeholder="商品ID">
+        <input id="uploadImgFile" type="file" accept="image/*">
+        <button id="uploadImgBtn" onclick="doUploadImg()">上传</button>
+        <div id="uploadImgResult" class="result"></div>
     </section>
 
     <!-- 库存检查 -->
@@ -1013,7 +1024,7 @@
     function applyRoleViews() {
         const isMerchant = currentRole === 'merchant';
         const isManager = currentRole === 'manager';
-        ['add', 'addMore', 'edit', 'send', 'pending'].forEach(key => {
+        ['add', 'addMore', 'edit', 'send', 'pending', 'uploadImg'].forEach(key => {
             document.querySelectorAll('.nav a[data-nav="' + key + '"]').forEach(a => a.style.display = isMerchant ? '' : 'none');
             const sec = document.getElementById('sec-' + key);
             if (sec) sec.style.display = isMerchant ? '' : 'none';
@@ -1304,7 +1315,10 @@
             box.innerHTML =
                 '<table><thead><tr>' + keys.map(k => '<th>' + escapeHtml(k) + '</th>').join('') + (hasStock ? '<th>状态</th>' : '') + '</tr></thead><tbody>' +
                 list.map(row =>
-                    '<tr>' + keys.map(k => '<td>' + escapeHtml(row[k]) + '</td>').join('') +
+                    '<tr>' + keys.map(k => {
+                        if (k === 'image_url' && row[k]) return '<td><img src="' + escapeHtml(row[k]) + '" style="max-height:60px;border-radius:4px" onerror="this.style.display=\'none\'"></td>';
+                        return '<td>' + escapeHtml(row[k]) + '</td>';
+                    }).join('') +
                     (hasStock ? '<td>' + stockBadge(row.stock) + '</td>' : '') + '</tr>'
                 ).join('') + '</tbody></table>';
             return false;
@@ -2107,6 +2121,33 @@
                     loadMessages();
                 }
             } catch (e) { show('editNameResult', '改名失败: ' + e.message, true); }
+        });
+    }
+
+    // 20. 上传商品图片
+    async function loadUploadImg() {
+        markActive('uploadImg');
+        return false;
+    }
+
+    async function doUploadImg() {
+        const id = document.getElementById('uploadImgId').value.trim();
+        const fileInput = document.getElementById('uploadImgFile');
+        if (!id) return show('uploadImgResult', '请输入商品ID', true);
+        if (!fileInput.files.length) return show('uploadImgResult', '请选择图片文件', true);
+        const file = fileInput.files[0];
+        if (!file.type.startsWith('image/')) return show('uploadImgResult', '只能上传图片文件', true);
+        const fd = new FormData();
+        fd.append('id', id);
+        fd.append('file', file);
+        await withBusy('uploadImgBtn', '上传中...', async () => {
+            try {
+                const resp = await fetch('/api/purchase/add/picture', { method: 'PUT', body: fd });
+                if (resp.status === 401) { showLogin(); return; }
+                const data = await resp.json();
+                show('uploadImgResult', data.message || JSON.stringify(data, null, 2), !data.success);
+                if (data.success) toast('图片上传成功', 'ok');
+            } catch (e) { show('uploadImgResult', '上传失败: ' + e.message, true); }
         });
     }
 
