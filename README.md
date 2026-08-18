@@ -6,7 +6,7 @@
 
 通融物管 APP 是一个基于 Spring Boot 构建的**物业管理综合后端服务系统**，提供**用户认证授权、采购管理、商品库存管理、员工信息管理、实时天气查询、IP智能定位及文件导出**等核心功能。项目采用 RESTful API 设计，内置多级缓存机制以应对高并发场景，适用于中小型物业公司的日常运营管理。
 
-> **注⚠️：本人声明，此说明书本人懒得写，直接用deepseek生成的。后端java、Spring Boot、数据库MySQL由本人所写，但是前端界面代码是Opencode AI写的，因为我早就不学前端三件套了，所以关于前端的框架知识已经忘得一干二净。有时候学长学姐们说我有的后端代码写的不合理，可我根本就不知道哪里错了，所以我直接用AI改了。前端界面我用的感觉良好，如果有建议修改的话可以联系我。如果本系统有什么问题与本说明书不符，可以发QQ邮箱联系本人，联系方式在最下面**
+> **注⚠️：本人声明，此说明书本人懒得写，直接用deepseek生成的。后端java、Spring Boot、数据库MySQL由本人所写，但是前端界面代码是Opencode AI写的，因为我早就不学前端三件套了，所以关于前端的框架知识已经忘得一干二净。有时候学长学姐们说我有的后端代码写的不合理，可我根本就不知道哪里错了，所以我直接用AI改了。另外，我写代码是怎么舒服怎么来的，因此，不小心把controller和业务代码写在了一起，没办法，只能重构。所以在2026年8月16日进行了项目重构.前端界面我用的感觉良好，如果有建议修改的话可以联系我。如果本系统有什么问题与本说明书不符，可以发QQ邮箱联系本人，联系方式在最下面**
 
 
 **当前版本：** v1.2.4  
@@ -27,6 +27,7 @@
 | 1.2.4(新增功能)  | 消息通知功能上线 |
 | 1.2.4(新增功能)  | 点赞与删除自己评论功能上线 |
 | 1.2.4(新增功能)  | 改名功能上线 |
+| 2.1.0  | 继1.2.4版本，对本系统进行了重构，分离controller与业务代码 |
  
 
 ---
@@ -343,35 +344,63 @@ if (!validTableNames.contains(nameOfPointedDatabaseName))
 
 ```
 TongRong_Property_Company_2nd/
+├── pom.xml
 ├── src/main/java/org/designer/tongrong_property_company_2nd/
-│   ├── auth/                          # 认证授权模块
-│   │   ├── AuthController.java        # 注册/登录/登出/状态
-│   │   ├── LoginInterceptor.java      # 登录拦截器
-│   │   └── WebConfig.java             # 拦截器配置
-│   ├── controller/                    # 员工管理模块
-│   │   ├── AddWorker.java             # 新增员工 (POST /api/add)
-│   │   ├── EditWork.java              # 编辑员工 (POST /api/edit)
-│   │   ├── FireWorker.java            # 删除员工 (GET /api/delete)
-│   │   └── SelectWorker.java          # 查询全部 (GET /api/select)
-│   ├── purchase/                      # 采购管理模块
-│   │   └── PurchaseBase.java          # 商品CRUD/库存/审批/评论
-│   ├── weather/                       # 天气查询模块
-│   │   └── OpenMeteoDemo.java         # 天气API + IP定位 + 缓存
-│   ├── io/                            # 文件IO模块
-│   │   └── GetInformationToFile.java  # 数据导出到文件
-│   ├── SetPersonalPermission.java     # 个人认证(模拟)
-│   ├── GetNameOfDatabaseWhichWeForgot.java  # 数据库表名查询
-│   └── TongRongPropertyCompany2ndApplication.java  # 启动类
+│   ├── TongRongPropertyCompany2ndApplication.java
+│   ├── SetPersonalPermission.java
+│   ├── GetNameOfDatabaseWhichWeForgot.java
+│   │
+│   ├── auth/                              # 认证模块
+│   │   ├── AuthController.java                # /api/auth/**
+│   │   ├── AuthService.java                   # 注册/登录业务逻辑
+│   │   ├── AuthMapper.java                    # 用户表 SQL
+│   │   ├── EmailCodeService.java              # 邮箱验证码
+│   │   ├── LoginInterceptor.java              # 登录拦截器
+│   │   └── WebConfig.java                     # 拦截器注册
+│   │
+│   ├── common/                            # 公共组件
+│   │   ├── SessionHelper.java                 # Session 工具类
+│   │   ├── PermissionInterceptor.java         # 商家权限拦截器
+│   │   ├── MerchantOnly.java                  # @MerchantOnly 注解
+│   │   ├── AccessDeniedException.java         # 权限不足异常
+│   │   └── GlobalExceptionHandler.java        # 全局异常处理
+│   │
+│   ├── controller/                        # 控制器层
+│   │   ├── WorkerController.java              # /api/** 员工管理
+│   │   └── PurchaseController.java            # /api/purchase/** 商品/评论/消息/用户
+│   │
+│   ├── entity/                            # 实体类
+│   │   ├── Worker.java
+│   │   ├── User.java
+│   │   ├── Product.java
+│   │   ├── Comment.java
+│   │   ├── CommentMessage.java
+│   │   └── Person.java
+│   │
+│   ├── mapper/                            # 数据访问层
+│   │   ├── WorkerMapper.java
+│   │   ├── UserMapper.java
+│   │   ├── ProductMapper.java
+│   │   ├── CommentMapper.java
+│   │   ├── PermissionMapper.java
+│   │   └── DatabaseMapper.java
+│   │
+│   ├── service/                           # 业务逻辑层
+│   │   ├── WorkerService.java
+│   │   ├── UserService.java
+│   │   ├── ProductService.java
+│   │   ├── CommentService.java
+│   │   ├── PermissionService.java
+│   │   └── DatabaseService.java
+│   │
+│   ├── weather/                           # (未动)
+│   │   └── OpenMeteoDemo.java
+│   └── io/                                # (未动)
+│       └── GetInformationToFile.java
+│
 ├── src/main/resources/
-│   ├── application.properties         # 应用配置
-│   └── static/
-│       └── index.html                 # 管理后台前端页面
-├── src/main/sql/                      # SQL脚本
-│   ├── login_system.sql               # 登录系统表结构
-│   ├── comments.sql                   # 评论表结构
-│   └── mock_id_card_auth.sql          # 实名认证模拟数据
-├── pom.xml                            # Maven依赖管理
-└── 通融物管APP说明书.md               # 本文档
+│   └── application.properties
+└── uploads/
 ```
 
 ---
@@ -586,8 +615,9 @@ spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 |评论回复通知 |✅ 已完成 | v1.2.4 |
 | 删评功能 |✅ 已完成 | v1.2.4 |
 | 修改用户名 |✅ 已完成 | v1.2.4 |
-| 物业管理端界面 | 🚧 规划中 | v1.2.4 |
-| 小程序/APP前端 | 🚧 规划中 | v1.2.x |
+| 分离controller与业务代码 |✅ 已完成 | v2.1.0 |
+| 物业管理端界面 | 🚧 规划中 | x |
+| 小程序/APP前端 | 🚧 规划中 | x |
 | 高并发 | 🚧 规划中 | v3.1 |
 
 
@@ -623,7 +653,7 @@ spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 
 | 项目 | 信息 |
 |------|------|
-| **作者** | 贾奕嘉 |
+| **作者** | Jia Yijia |
 | **学校** | 中国地质大学·长城学院 |
 | **主邮箱** | conandoyle1@qq.com |
 | **备用邮箱** | 3662308525@qq.com |
@@ -631,7 +661,8 @@ spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 | **历史版本** | v1.2.1 (2026年7月27日 - 2026年8月4日) |
 | **历史版本** | v1.2.2 (2026年8月5日 - 2026年8月9日)  |
 | **历史版本** | v1.2.3 (2026年8月9日 - 2026年8月15日) |
-| **当前版本** | v1.2.4 (2026年8月15日 - 未完成)       |
+| **历史版本** | v1.2.4 (2026年8月15日 - 2026年8月18日)       |
+| **当前版本** | v1.2.4 (2026年8月18日 - 未完成)       |
 | **许可协议** | JYJ License |
 
 ---
